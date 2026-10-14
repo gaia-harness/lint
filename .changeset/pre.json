@@ -9,6 +9,7 @@
     "deps-refresh-oct",
     "drop-testing-library",
     "kebab-case-naming-layout",
+    "react-router-query-fetch-virtual-modules",
     "shadcn-token-rules-fc-ban",
     "stylelint-tailwind-apply",
     "vendored-ui-prefer-destructuring"
