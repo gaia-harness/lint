@@ -15,7 +15,7 @@ import {ESLint} from 'eslint';
 import {describe, expect, test} from 'vitest';
 import {buildBase} from './base.js';
 import {react} from './react.js';
-import {reactRouter} from './react-router.js';
+import {buildReactRouter} from './react-router.js';
 
 const ROUTE = 'app/routes/_public+/terms.tsx';
 const COMPONENT = 'app/components/Button/index.tsx';
@@ -32,7 +32,9 @@ const severityOf = async (
 };
 
 const withoutRouter = [...buildBase('app'), ...react];
-const withRouter = [...withoutRouter, ...reactRouter];
+const withRouter = [...withoutRouter, ...buildReactRouter('app')];
+
+const QUERY_FETCH_RULE = 'no-imperative-query-fetch/no-imperative-query-fetch';
 
 describe('reactRouter', () => {
   test('no-empty-pattern is ON for route files without the opt-in', async () => {
@@ -45,6 +47,30 @@ describe('reactRouter', () => {
 
   test('the relaxation does not leak outside routes/', async () => {
     expect(await severityOf(withRouter, COMPONENT, 'no-empty-pattern')).toBe(2);
+  });
+
+  test('no-imperative-query-fetch is ON across the source dir, tests and stories included', async () => {
+    for (const file of [
+      ROUTE,
+      COMPONENT,
+      'app/services/items/queries.ts',
+      'app/components/Button/tests/index.stories.tsx',
+      'app/utils/tests/format.test.ts',
+    ]) {
+      expect(await severityOf(withRouter, file, QUERY_FETCH_RULE)).toBe(2);
+    }
+  });
+
+  test('no-imperative-query-fetch stays inside the source dir', async () => {
+    expect(
+      await severityOf(withRouter, 'test/setup.ts', QUERY_FETCH_RULE),
+    ).toBe(0);
+  });
+
+  test('no-imperative-query-fetch follows a custom sourceDir', async () => {
+    const custom = [...buildBase('src'), ...react, ...buildReactRouter('src')];
+    expect(await severityOf(custom, 'src/routes/home.tsx', QUERY_FETCH_RULE)).toBe(2);
+    expect(await severityOf(custom, 'app/routes/home.tsx', QUERY_FETCH_RULE)).toBe(0);
   });
 
   test('react alone carries no router-specific block', () => {

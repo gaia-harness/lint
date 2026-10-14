@@ -170,6 +170,13 @@ const buildTsEslintConfig = (sourceDir: string): Linter.Config[] => [
   },
 ];
 
+// `^virtual:` covers Vite plugin virtual modules (`virtual:msw` and the like),
+// which no resolver can find on disk.
+const NO_UNRESOLVED: Linter.RuleEntry = [
+  'error',
+  {caseSensitive: true, commonjs: true, ignore: ['^virtual:']},
+];
+
 const buildImportXConfig = (sourceDir: string): Linter.Config[] => [
   {
     name: 'import-x-all-files',
@@ -196,7 +203,7 @@ const buildImportXConfig = (sourceDir: string): Linter.Config[] => [
     name: 'import-x/root-ts-files',
     rules: {
       'import-x/no-extraneous-dependencies': 'off',
-      'import-x/no-unresolved': 'error',
+      'import-x/no-unresolved': NO_UNRESOLVED,
       'import-x/prefer-default-export': 'off',
     },
   },
@@ -209,10 +216,10 @@ const buildImportXConfig = (sourceDir: string): Linter.Config[] => [
     },
   },
   {
-    files: [`${sourceDir}/**/!(*.test|*.stories).ts?(x)`],
+    files: [`${sourceDir}/**/*.ts?(x)`],
     name: 'import-x/app-test-files',
     rules: {
-      'import-x/no-unresolved': 'error',
+      'import-x/no-unresolved': NO_UNRESOLVED,
     },
   },
   {
