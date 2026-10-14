@@ -55,7 +55,7 @@ Non-GAIA projects that store source under `src/` (or any other path):
 const lint = gaiaLint({sourceDir: 'src'});
 ```
 
-That single call rebinds `base`, `styleHygiene`, and `guardrails` to the
+That single call rebinds `base`, `reactRouter`, `styleHygiene`, and `guardrails` to the
 new source root: no per-config override blocks needed.
 
 ## Bundle shape
@@ -64,7 +64,7 @@ new source root: no per-config override blocks needed.
 | ---------------- | -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- | --------- |
 | `base`           | `Linter.Config[]`                | JS recommended, TypeScript (typescript-eslint), `import-x`, unused-disable-directive reporting at error, `prefer-arrow-functions`, lodash/underscore guard, `no-restricted-imports` (bans bare `@conform-to/zod`) | required  |
 | `react`          | `Linter.Config[]`                | `eslint-plugin-react`, `react-hooks`, `jsx-a11y`, GAIA-specific React rules                                                                       | required for React apps |
-| `reactRouter`    | `Linter.Config[]`                | Relaxations for React Router framework mode. Spread **after** `react`. See [Router-specific rules](#router-specific-rules)                        | React Router only |
+| `reactRouter`    | `Linter.Config[]`                | Relaxations for React Router framework mode, plus `no-imperative-query-fetch` (custom). Spread **after** `react`. See [Router-specific rules](#router-specific-rules) | React Router only |
 | `styleHygiene`   | `Linter.Config[]`                | `canonical`, `perfectionist`, `unicorn`, `unused-imports`, `check-file`                                                                           | required  |
 | `guardrails`     | `Linter.Config[]`                | `no-enum` (custom), `no-switch` (custom), `no-jsx-iife` (custom), `no-null-render` (custom), `no-zod-enum` (custom), `cn-conditional` (custom), `no-relative-import-paths`, `sonarjs`, `import-x`, `prefer-arrow-functions` | required  |
 | `testing`        | `Linter.Config[]`                | Vitest + jest-dom config scoped to `*.test.*`, `*.stories.*` and `test/`                                                                          | optional  |
@@ -259,6 +259,14 @@ shape. You will most likely also want to ignore your generated route tree:
 ```js
 ...lint.ignores({extra: ['**/routeTree.gen.ts']}),
 ```
+
+`reactRouter` also adds one rule, `no-imperative-query-fetch/no-imperative-query-fetch`,
+on every TypeScript file under the source dir. It bans `ensureQueryData`,
+`fetchQuery`, `prefetchQuery` and their infinite variants on any member call,
+so a route has one fetch idiom: `await queryClient.query(options)` in a
+clientLoader, read with `useSuspenseQuery(options)` in the component. It
+matches by method name, so it fires whether or not TanStack Query is
+installed.
 
 The `/.react-router/**` glob stays in the `ignores` defaults. It names a
 directory that only exists in a React Router project, so it costs other

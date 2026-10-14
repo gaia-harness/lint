@@ -9,7 +9,7 @@ import {ignores, type GaiaLintIgnoresOptions} from './configs/ignores.js';
 import {playwright} from './configs/playwright.js';
 import {prettier} from './configs/prettier.js';
 import {react} from './configs/react.js';
-import {reactRouter} from './configs/react-router.js';
+import {buildReactRouter} from './configs/react-router.js';
 import {buildShadcn, type GaiaLintShadcnOptions} from './configs/shadcn.js';
 import {storybook} from './configs/storybook.js';
 import {buildStyleHygiene} from './configs/style-hygiene.js';
@@ -93,7 +93,7 @@ const gaiaLint = (opts?: GaiaLintOptions): GaiaLintBundle => {
     playwright,
     prettier,
     react,
-    reactRouter,
+    reactRouter: buildReactRouter(sourceDir),
     shadcn: (shadcnOpts) => buildShadcn(sourceDir, shadcnOpts),
     storybook,
     styleHygiene: buildStyleHygiene(sourceDir),
