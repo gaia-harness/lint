@@ -18,3 +18,10 @@ declare module '@eslint-community/eslint-plugin-eslint-comments/configs' {
   };
   export default configs;
 }
+
+declare module 'eslint-plugin-i18next' {
+  import type {ESLint} from 'eslint';
+
+  const plugin: ESLint.Plugin;
+  export default plugin;
+}
