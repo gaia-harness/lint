@@ -29,6 +29,8 @@ export default defineConfig([
   ...lint.playwright,
   ...lint.styleHygiene,
   ...lint.guardrails,
+  ...lint.i18n, // opt-in; drop if the UI is not translated
+  ...lint.zod, // opt-in; Zod 4 projects
   ...lint.betterTailwind({entryPoint: './app/styles/tailwind.css'}),
   ...lint.prettier,
   ...lint.shadcn({ui: '~/components/ui'}), // opt-in; must be last
@@ -37,7 +39,9 @@ export default defineConfig([
 
 Drop the `reactRouter` line if you are not on React Router framework mode.
 See [Router-specific rules](#router-specific-rules). Drop the `shadcn` line if
-you do not use shadcn/ui; see [shadcn factory](#shadcn-factory).
+you do not use shadcn/ui; see [shadcn factory](#shadcn-factory). Drop the
+`i18n` or `zod` line if the project does not translate its UI or does not use
+Zod; see [i18n and Zod](#i18n-and-zod).
 
 ## Factory options
 
@@ -63,10 +67,12 @@ new source root: no per-config override blocks needed.
 | Property         | Shape                            | Includes                                                                                                                                          | Required? |
 | ---------------- | -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- | --------- |
 | `base`           | `Linter.Config[]`                | JS recommended, TypeScript (typescript-eslint), `import-x`, unused-disable-directive reporting at error, `eslint-comments` (every disable states a reason), `prefer-arrow-functions`, lodash/underscore guard, `no-restricted-imports` (bans bare `@conform-to/zod`) | required  |
-| `react`          | `Linter.Config[]`                | `eslint-plugin-react`, `react-hooks`, `jsx-a11y`, `react-refresh` (Fast Refresh-safe exports), GAIA-specific React rules                          | required for React apps |
+| `react`          | `Linter.Config[]`                | `eslint-plugin-react`, `react-hooks`, `jsx-a11y`, `react-refresh` (Fast Refresh-safe exports), `react-you-might-not-need-an-effect` (Effect misuse), nine `@eslint-react` rules (Effect cleanup, React 19 forms), GAIA-specific React rules | required for React apps |
 | `reactRouter`    | `Linter.Config[]`                | Relaxations for React Router framework mode, route-module exports allowed by `react-refresh`, plus `no-imperative-query-fetch` (custom). Spread **after** `react`. See [Router-specific rules](#router-specific-rules) | React Router only |
 | `styleHygiene`   | `Linter.Config[]`                | `canonical`, `perfectionist`, `unicorn`, `unused-imports`, `check-file`                                                                           | required  |
 | `guardrails`     | `Linter.Config[]`                | `regexp` (recommended, ReDoS included), `no-enum` (custom), `no-switch` (custom), `no-jsx-iife` (custom), `no-null-render` (custom), `no-zod-enum` (custom), `cn-conditional` (custom), `no-relative-import-paths`, `sonarjs`, `import-x`, `prefer-arrow-functions` | required  |
+| `i18n`           | `Linter.Config[]`                | `i18next/no-literal-string` on raw JSX text under the source dir. See [i18n and Zod](#i18n-and-zod)                                              | optional  |
+| `zod`            | `Linter.Config[]`                | `eslint-plugin-zod` recommended, minus `consistent-import`. See [i18n and Zod](#i18n-and-zod)                                                    | optional  |
 | `testing`        | `Linter.Config[]`                | Vitest + jest-dom config scoped to `*.test.*`, `*.stories.*` and `test/`                                                                          | optional  |
 | `storybook`      | `Linter.Config[]`                | `eslint-plugin-storybook` scoped to `*.stories.*` and `.storybook/main.*`                                                                          | optional  |
 | `playwright`     | `Linter.Config[]`                | `eslint-plugin-playwright` scoped to `.playwright/`                                                                                                | optional  |
@@ -280,6 +286,26 @@ module is still reported; move it to its own module.
 The `/.react-router/**` glob stays in the `ignores` defaults. It names a
 directory that only exists in a React Router project, so it costs other
 projects nothing.
+
+## i18n and Zod
+
+Both are opt-in arrays: spread them only when the project uses the library.
+
+`lint.i18n` turns on `i18next/no-literal-string` in `jsx-text-only` mode for
+`.tsx`/`.jsx` under the source dir. It reports raw text between JSX tags
+(`<p>Hello</p>`), which should come from `t()`. Attributes are not checked,
+since `data-slot`, `htmlFor` and `value` strings are not UI copy. Stories,
+tests, `tests/` helpers and the vendored `components/ui/*.tsx` files are
+exempt. Text that must stay untranslated, such as an error boundary that has to
+render without i18n, takes an inline disable with a reason. A project that
+drops i18n removes the line, and adds it back if it adds a language later.
+
+`lint.zod` turns on `eslint-plugin-zod`'s recommended set for Zod 4:
+conflicting or duplicate checks, `.optional()` with `.default()`, a `throw`
+inside `.refine()`, a refine without an error message, `z.nativeEnum`,
+`z.any()`, and the Zod 3 forms Zod 4 deprecates. `consistent-import` is off
+because it wants `import * as z from 'zod'`, and GAIA writes
+`import {z} from 'zod'`.
 
 ## Tailwind / better-tailwindcss factory
 

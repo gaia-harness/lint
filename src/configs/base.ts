@@ -357,9 +357,11 @@ const restrictedSyntaxConfig: Linter.Config[] = [
           // A `.length` left operand is always numeric, so `&&` returns the
           // literal `0` (a renderable value) when the list is empty, leaking
           // "0" into the DOM. `.length` is the single most common numeric-0
-          // leak and flagging it has zero false positives; the general
-          // `count && <JSX/>` case is still not caught (any expression could
-          // be numeric). Report-only: a blind rewrite is unsafe in general.
+          // leak and flagging it has zero false positives. The general
+          // `count && <JSX/>` case is caught by `sonarjs/jsx-no-leaked-render`
+          // in `guardrails`, which needs type information; this selector
+          // needs none, so it still holds where types are unavailable.
+          // Report-only: a blind rewrite is unsafe in general.
           message:
             'A numeric `.length` left operand leaks "0" into the DOM when empty. Force a real boolean: `items.length > 0 && <JSX/>`.',
           selector:

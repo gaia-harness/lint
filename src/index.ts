@@ -5,6 +5,7 @@ import {
   type GaiaLintBetterTailwindOptions,
 } from './configs/better-tailwind.js';
 import {buildGuardrails} from './configs/guardrails.js';
+import {buildI18n} from './configs/i18n.js';
 import {ignores, type GaiaLintIgnoresOptions} from './configs/ignores.js';
 import {playwright} from './configs/playwright.js';
 import {prettier} from './configs/prettier.js';
@@ -14,6 +15,7 @@ import {buildShadcn, type GaiaLintShadcnOptions} from './configs/shadcn.js';
 import {storybook} from './configs/storybook.js';
 import {buildStyleHygiene} from './configs/style-hygiene.js';
 import {testing} from './configs/testing.js';
+import {zod} from './configs/zod.js';
 
 export type {
   GaiaLintBetterTailwindOptions,
@@ -46,6 +48,11 @@ export type GaiaLintBundle = {
   base: Linter.Config[];
   betterTailwind: (opts: GaiaLintBetterTailwindOptions) => Linter.Config[];
   guardrails: Linter.Config[];
+  /**
+   * Opt-in `i18next/no-literal-string` (JSX text only) for projects that
+   * translate their UI. Drop it when the project drops i18n.
+   */
+  i18n: Linter.Config[];
   ignores: GaiaLintIgnores;
   playwright: Linter.Config[];
   prettier: Linter.Config[];
@@ -60,6 +67,8 @@ export type GaiaLintBundle = {
   storybook: Linter.Config[];
   styleHygiene: Linter.Config[];
   testing: Linter.Config[];
+  /** Opt-in `eslint-plugin-zod` recommended rules, for Zod 4 projects. */
+  zod: Linter.Config[];
 };
 
 const buildIgnoresAccessor = (): GaiaLintIgnores => {
@@ -89,6 +98,7 @@ const gaiaLint = (opts?: GaiaLintOptions): GaiaLintBundle => {
     base: buildBase(sourceDir),
     betterTailwind,
     guardrails: buildGuardrails(sourceDir),
+    i18n: buildI18n(sourceDir),
     ignores: buildIgnoresAccessor(),
     playwright,
     prettier,
@@ -98,6 +108,7 @@ const gaiaLint = (opts?: GaiaLintOptions): GaiaLintBundle => {
     storybook,
     styleHygiene: buildStyleHygiene(sourceDir),
     testing,
+    zod,
   };
 };
 

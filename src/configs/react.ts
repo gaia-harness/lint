@@ -1,6 +1,8 @@
+import eslintReact from '@eslint-react/eslint-plugin';
 import {configs, plugins} from 'eslint-config-airbnb-extended';
 import reactRefresh from 'eslint-plugin-react-refresh';
-import type {Linter} from 'eslint';
+import youMightNotNeedAnEffect from 'eslint-plugin-react-you-might-not-need-an-effect';
+import type {ESLint, Linter} from 'eslint';
 
 /**
  * React flat-config block.
@@ -75,6 +77,56 @@ export const react: Linter.Config[] = [
         'error',
         ONLY_EXPORT_COMPONENTS_OPTIONS,
       ],
+    },
+  },
+  // Effects that should not be Effects: state derived from other state or
+  // props, user-event logic, chained updates, notifying a parent, resetting
+  // state on a prop change (use `key`), and hand-rolled store subscriptions
+  // (use `useSyncExternalStore`). Complements `react-hooks/set-state-in-effect`.
+  {
+    files: ['**/*.ts?(x)', '**/*.js?(x)'],
+    name: 'react-you-might-not-need-an-effect',
+    plugins: {
+      'react-you-might-not-need-an-effect':
+        youMightNotNeedAnEffect as unknown as ESLint.Plugin,
+    },
+    rules: {
+      'react-you-might-not-need-an-effect/no-adjust-state-on-prop-change':
+        'error',
+      'react-you-might-not-need-an-effect/no-chain-state-updates': 'error',
+      'react-you-might-not-need-an-effect/no-derived-state': 'error',
+      'react-you-might-not-need-an-effect/no-event-handler': 'error',
+      'react-you-might-not-need-an-effect/no-external-store-subscription':
+        'error',
+      'react-you-might-not-need-an-effect/no-initialize-state': 'error',
+      'react-you-might-not-need-an-effect/no-pass-data-to-parent': 'error',
+      'react-you-might-not-need-an-effect/no-pass-live-state-to-parent':
+        'error',
+      'react-you-might-not-need-an-effect/no-reset-all-state-on-prop-change':
+        'error',
+    },
+  },
+  // Nine rules from @eslint-react, not its preset: the preset re-enables hook
+  // rules `react-hooks` already owns. An Effect that adds a listener, timer,
+  // interval, observer or fetch must tear it down in its cleanup (a fetch
+  // through an AbortController). React 19 forms only: `ref` as a prop instead
+  // of `forwardRef`, `use(Context)` instead of `useContext`, and `<Context>`
+  // instead of `<Context.Provider>`. `no-context-provider` matches by name, so
+  // it reports `ThemeContext.Provider` but not `Ctx.Provider`.
+  {
+    files: ['**/*.ts?(x)', '**/*.js?(x)'],
+    name: 'eslint-react',
+    plugins: {'@eslint-react': eslintReact as unknown as ESLint.Plugin},
+    rules: {
+      '@eslint-react/no-context-provider': 'error',
+      '@eslint-react/no-forward-ref': 'error',
+      '@eslint-react/no-use-context': 'error',
+      '@eslint-react/web-api-no-leaked-event-listener': 'error',
+      '@eslint-react/web-api-no-leaked-fetch': 'error',
+      '@eslint-react/web-api-no-leaked-intersection-observer': 'error',
+      '@eslint-react/web-api-no-leaked-interval': 'error',
+      '@eslint-react/web-api-no-leaked-resize-observer': 'error',
+      '@eslint-react/web-api-no-leaked-timeout': 'error',
     },
   },
   {
