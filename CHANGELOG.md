@@ -1,5 +1,11 @@
 # @gaia-react/lint
 
+## 3.0.0-rc.6
+
+### Patch Changes
+
+- [#68](https://github.com/gaia-react/lint/pull/68) [`83a68aa`](https://github.com/gaia-react/lint/commit/83a68aaf80d3810947d0f3627f7039c380dd01f5) Thanks [@stevensacks](https://github.com/stevensacks)! - Updated: `@shadcn/lint` to 0.2.1, `eslint-plugin-better-tailwindcss` to 4.9.0, `eslint-plugin-playwright` to 2.12.1 and `stylelint-order` to 8.1.2, and refreshed the lockfile.
+
 ## 3.0.0-rc.5
 
 ### Minor Changes
