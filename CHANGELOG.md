@@ -1,5 +1,24 @@
 # @gaia-react/lint
 
+## 3.0.0-rc.5
+
+### Minor Changes
+
+- [#65](https://github.com/gaia-react/lint/pull/65) [`cd7d1d9`](https://github.com/gaia-react/lint/commit/cd7d1d907493d9e1185d7e341b84fdfce07a8c74) Thanks [@stevensacks](https://github.com/stevensacks)! - Added: four rule sets that close gaps in the bundle.
+
+  - `base` turns on the type-aware `@typescript-eslint/no-unsafe-call`, `no-unsafe-member-access`, `no-unsafe-argument`, `no-deprecated` and `no-unnecessary-type-conversion`, completing the `no-unsafe-*` family. Tests and stories keep the `no-unsafe-*` relaxation they already had.
+  - `base` adds `@eslint-community/eslint-comments`: every `eslint-disable` must give a reason after `--` (`// eslint-disable-next-line no-console -- startup banner`), a bare blanket `eslint-disable` is banned, and block disables must be paired with an enable unless they cover the whole file.
+  - `guardrails` adds `eslint-plugin-regexp`'s recommended set, which catches patterns that backtrack catastrophically (ReDoS), alternatives that can never match and needless escapes.
+  - `react` adds `react-refresh/only-export-components`, so a component module that also exports non-components, which breaks Fast Refresh, is reported. `reactRouter` allows React Router's route-module exports (`loader`, `action`, `meta`, ...) in route modules and `root.tsx`, and the `shadcn` vendored-ui exemption turns the rule off for registry files.
+
+  Action required on upgrade: add a `-- reason` to each `eslint-disable` that lacks one, and move any non-component export out of a component module.
+
+- [#66](https://github.com/gaia-react/lint/pull/66) [`8a1ecf4`](https://github.com/gaia-react/lint/commit/8a1ecf4ddcf11ae827c1676150792e0932672fe9) Thanks [@stevensacks](https://github.com/stevensacks)! - Added: `react` reports Effects that should not be Effects (`react-you-might-not-need-an-effect`: state derived from other state or props, user-event logic in an Effect, chained updates, notifying a parent, resetting state on a prop change instead of using `key`). It also adds nine `@eslint-react` rules: an Effect that adds a listener, timer, interval, observer or fetch must clean it up, and React 19 forms replace `forwardRef`, `useContext` and `<Context.Provider>`.
+
+  Added: two opt-in arrays. `lint.i18n` reports raw JSX text that should come from `t()`; spread it only if the UI is translated. `lint.zod` turns on `eslint-plugin-zod`'s recommended rules for Zod 4 projects, minus `consistent-import`.
+
+  Changed: the `.length && <JSX/>` selector's comment now says that `sonarjs/jsx-no-leaked-render` already catches the general `count && <JSX/>` case.
+
 ## 3.0.0-rc.4
 
 ### Minor Changes
