@@ -6,6 +6,7 @@
   },
   "changesets": [
     "deps-dead-rules",
+    "deps-refresh-oct-2",
     "deps-refresh-oct",
     "drop-testing-library",
     "kebab-case-naming-layout",
