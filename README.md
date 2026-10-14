@@ -62,11 +62,11 @@ new source root: no per-config override blocks needed.
 
 | Property         | Shape                            | Includes                                                                                                                                          | Required? |
 | ---------------- | -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- | --------- |
-| `base`           | `Linter.Config[]`                | JS recommended, TypeScript (typescript-eslint), `import-x`, unused-disable-directive reporting at error, `prefer-arrow-functions`, lodash/underscore guard, `no-restricted-imports` (bans bare `@conform-to/zod`) | required  |
-| `react`          | `Linter.Config[]`                | `eslint-plugin-react`, `react-hooks`, `jsx-a11y`, GAIA-specific React rules                                                                       | required for React apps |
-| `reactRouter`    | `Linter.Config[]`                | Relaxations for React Router framework mode, plus `no-imperative-query-fetch` (custom). Spread **after** `react`. See [Router-specific rules](#router-specific-rules) | React Router only |
+| `base`           | `Linter.Config[]`                | JS recommended, TypeScript (typescript-eslint), `import-x`, unused-disable-directive reporting at error, `eslint-comments` (every disable states a reason), `prefer-arrow-functions`, lodash/underscore guard, `no-restricted-imports` (bans bare `@conform-to/zod`) | required  |
+| `react`          | `Linter.Config[]`                | `eslint-plugin-react`, `react-hooks`, `jsx-a11y`, `react-refresh` (Fast Refresh-safe exports), GAIA-specific React rules                          | required for React apps |
+| `reactRouter`    | `Linter.Config[]`                | Relaxations for React Router framework mode, route-module exports allowed by `react-refresh`, plus `no-imperative-query-fetch` (custom). Spread **after** `react`. See [Router-specific rules](#router-specific-rules) | React Router only |
 | `styleHygiene`   | `Linter.Config[]`                | `canonical`, `perfectionist`, `unicorn`, `unused-imports`, `check-file`                                                                           | required  |
-| `guardrails`     | `Linter.Config[]`                | `no-enum` (custom), `no-switch` (custom), `no-jsx-iife` (custom), `no-null-render` (custom), `no-zod-enum` (custom), `cn-conditional` (custom), `no-relative-import-paths`, `sonarjs`, `import-x`, `prefer-arrow-functions` | required  |
+| `guardrails`     | `Linter.Config[]`                | `regexp` (recommended, ReDoS included), `no-enum` (custom), `no-switch` (custom), `no-jsx-iife` (custom), `no-null-render` (custom), `no-zod-enum` (custom), `cn-conditional` (custom), `no-relative-import-paths`, `sonarjs`, `import-x`, `prefer-arrow-functions` | required  |
 | `testing`        | `Linter.Config[]`                | Vitest + jest-dom config scoped to `*.test.*`, `*.stories.*` and `test/`                                                                          | optional  |
 | `storybook`      | `Linter.Config[]`                | `eslint-plugin-storybook` scoped to `*.stories.*` and `.storybook/main.*`                                                                          | optional  |
 | `playwright`     | `Linter.Config[]`                | `eslint-plugin-playwright` scoped to `.playwright/`                                                                                                | optional  |
@@ -268,6 +268,15 @@ clientLoader, read with `useSuspenseQuery(options)` in the component. It
 matches by method name, so it fires whether or not TanStack Query is
 installed.
 
+`react` turns on `react-refresh/only-export-components`, because a module that
+exports anything besides components cannot be hot-swapped and Fast Refresh
+falls back to a full reload. `reactRouter` lets route modules (`**/routes/**`
+and `root.tsx`) export React Router's route-module names beside their
+component: `loader`, `clientLoader`, `action`, `clientAction`, `middleware`,
+`clientMiddleware`, `meta`, `links`, `headers`, `handle`, `shouldRevalidate`,
+`ErrorBoundary`, `HydrateFallback` and `Layout`. Any other export from a route
+module is still reported; move it to its own module.
+
 The `/.react-router/**` glob stays in the `ignores` defaults. It names a
 directory that only exists in a React Router project, so it costs other
 projects nothing.
@@ -339,7 +348,9 @@ block: `@typescript-eslint/no-unnecessary-condition`, `eqeqeq`,
 `react/no-array-index-key`, `jsx-a11y/label-has-associated-control`,
 `jsx-a11y/click-events-have-key-events`,
 `jsx-a11y/no-noninteractive-element-interactions` and
-`shadcn/require-static-classes`.
+`shadcn/require-static-classes`. `react-refresh/only-export-components` is off
+too, since `button.tsx` exports `buttonVariants` and `toast.tsx` exports its
+toast manager beside their components.
 
 Everything else stays on in vendored ui: `shadcn/no-raw-colors`, `react-hooks/*`,
 and every other correctness rule. `components/ui/tests/**` is GAIA-authored and

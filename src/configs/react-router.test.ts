@@ -11,7 +11,8 @@
  * `calculateConfigForFile` computes config only; it never parses the file, so
  * the paths below do not need to exist.
  */
-import {ESLint} from 'eslint';
+import {ESLint, type Linter} from 'eslint';
+import tseslint from 'typescript-eslint';
 import {describe, expect, test} from 'vitest';
 import {buildBase} from './base.js';
 import {react} from './react.js';
@@ -77,5 +78,70 @@ describe('reactRouter', () => {
     expect(react.some((block) => block.name?.startsWith('react-router/'))).toBe(
       false,
     );
+  });
+});
+
+describe('react-refresh/only-export-components', () => {
+  const eslint = new ESLint({
+    overrideConfig: [
+      ...withRouter,
+      tseslint.configs.disableTypeChecked as Linter.Config,
+      {
+        languageOptions: {
+          parserOptions: {project: null, projectService: false},
+        },
+      },
+    ],
+    overrideConfigFile: true,
+  });
+
+  const RULE = 'react-refresh/only-export-components';
+
+  const refreshHits = async (code: string, filePath: string): Promise<number> => {
+    const [result] = await eslint.lintText(code, {filePath});
+    return result.messages.filter((message) => message.ruleId === RULE).length;
+  };
+
+  const MIXED = [
+    'export const formatLabel = (label: string) => label.trim();',
+    'const Label = () => <span>label</span>;',
+    'export default Label;',
+    '',
+  ].join('\n');
+
+  const ROUTE_MODULE = [
+    'export const loader = async () => ({ok: true});',
+    'export const meta = () => [{title: "Terms"}];',
+    'const Terms = () => <main>terms</main>;',
+    'export default Terms;',
+    '',
+  ].join('\n');
+
+  test('a component file that also exports a helper is reported', async () => {
+    expect(await refreshHits(MIXED, COMPONENT)).toBe(1);
+  });
+
+  test('a route module may export loader and meta beside its component', async () => {
+    expect(await refreshHits(ROUTE_MODULE, ROUTE)).toBe(0);
+  });
+
+  test('root.tsx is a route module too', async () => {
+    expect(await refreshHits(ROUTE_MODULE, 'app/root.tsx')).toBe(0);
+  });
+
+  test('route-module names are not exempt outside route modules', async () => {
+    expect(await refreshHits(ROUTE_MODULE, COMPONENT)).toBe(2);
+  });
+
+  test('stories and tests are exempt, inside routes/ too', async () => {
+    expect(
+      await refreshHits(MIXED, 'app/components/Button/tests/index.stories.tsx'),
+    ).toBe(0);
+    expect(
+      await refreshHits(MIXED, 'app/routes/tests/terms.test.tsx'),
+    ).toBe(0);
+    expect(
+      await refreshHits(MIXED, 'app/components/form/tests/fixture-form.tsx'),
+    ).toBe(0);
   });
 });

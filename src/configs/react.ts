@@ -1,4 +1,5 @@
 import {configs, plugins} from 'eslint-config-airbnb-extended';
+import reactRefresh from 'eslint-plugin-react-refresh';
 import type {Linter} from 'eslint';
 
 /**
@@ -11,6 +12,17 @@ import type {Linter} from 'eslint';
  * Router-specific relaxations live in the optional `reactRouter` block, not
  * here, so a project on a different file-based router keeps its full rule set.
  */
+/**
+ * Options for `react-refresh/only-export-components`, shared with the route
+ * block in `reactRouter`, which repeats them because flat config replaces a
+ * rule's options wholesale. Vite's React plugin keeps state across a hot
+ * update for constant and compound-component exports, so both are allowed.
+ */
+export const ONLY_EXPORT_COMPONENTS_OPTIONS = {
+  allowCompoundComponents: true,
+  allowConstantExport: true,
+} as const;
+
 export const react: Linter.Config[] = [
   // React plugin
   plugins.react,
@@ -47,6 +59,22 @@ export const react: Linter.Config[] = [
       'react/prop-types': 'off',
       'react/react-in-jsx-scope': 'off',
       'react/require-default-props': 'off',
+    },
+  },
+  // A module that exports anything besides components cannot be hot-swapped:
+  // Fast Refresh falls back to a full reload and drops component state. Test
+  // and story files, and the helpers beside them in `tests/` folders, are never
+  // hot-swapped as components, so they are exempt.
+  {
+    files: ['**/*.tsx', '**/*.jsx'],
+    ignores: ['**/*.test.ts?(x)', '**/*.stories.ts?(x)', '**/tests/**'],
+    name: 'react-refresh',
+    plugins: {'react-refresh': reactRefresh},
+    rules: {
+      'react-refresh/only-export-components': [
+        'error',
+        ONLY_EXPORT_COMPONENTS_OPTIONS,
+      ],
     },
   },
   {
