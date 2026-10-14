@@ -9,3 +9,12 @@ declare module 'eslint-plugin-you-dont-need-lodash-underscore' {
   };
   export default plugin;
 }
+
+declare module '@eslint-community/eslint-plugin-eslint-comments/configs' {
+  import type {Linter} from 'eslint';
+
+  const configs: {
+    recommended: Linter.Config & {rules: Linter.RulesRecord};
+  };
+  export default configs;
+}

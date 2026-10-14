@@ -1,3 +1,4 @@
+import eslintComments from '@eslint-community/eslint-plugin-eslint-comments/configs';
 import js from '@eslint/js';
 import {configs, plugins, rules} from 'eslint-config-airbnb-extended';
 import preferArrowFunctions from 'eslint-plugin-prefer-arrow-functions';
@@ -105,6 +106,7 @@ const buildTsEslintConfig = (sourceDir: string): Linter.Config[] => [
         'error',
         {ignoreArrowShorthand: true},
       ],
+      '@typescript-eslint/no-deprecated': 'error',
       '@typescript-eslint/no-floating-promises': [
         'error',
         {ignoreIIFE: true, ignoreVoid: true},
@@ -117,8 +119,12 @@ const buildTsEslintConfig = (sourceDir: string): Linter.Config[] => [
       '@typescript-eslint/no-throw-literal': 'off',
       '@typescript-eslint/no-unnecessary-boolean-literal-compare': 'error',
       '@typescript-eslint/no-unnecessary-condition': 'error',
+      '@typescript-eslint/no-unnecessary-type-conversion': 'error',
       '@typescript-eslint/no-unnecessary-type-parameters': 'off',
+      '@typescript-eslint/no-unsafe-argument': 'error',
       '@typescript-eslint/no-unsafe-assignment': 'error',
+      '@typescript-eslint/no-unsafe-call': 'error',
+      '@typescript-eslint/no-unsafe-member-access': 'error',
       '@typescript-eslint/no-unsafe-return': 'error',
       '@typescript-eslint/only-throw-error': 'off',
       '@typescript-eslint/prefer-nullish-coalescing': 'error',
@@ -147,7 +153,9 @@ const buildTsEslintConfig = (sourceDir: string): Linter.Config[] => [
     name: 'typescript/test-files',
     rules: {
       '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/no-unsafe-argument': 'off',
       '@typescript-eslint/no-unsafe-assignment': 'off',
+      '@typescript-eslint/no-unsafe-call': 'off',
       '@typescript-eslint/no-unsafe-member-access': 'off',
     },
   },
@@ -256,6 +264,31 @@ const unusedDisableDirectivesConfig: Linter.Config[] = [
   {
     linterOptions: {reportUnusedDisableDirectives: 'error'},
     name: 'gaia/unused-disable-directives',
+  },
+];
+
+/**
+ * Disable-directive hygiene. Every `eslint-disable` must say why after a `--`
+ * separator, so each bypass of a rule is reviewable where it sits. The
+ * recommended set also bans a bare blanket `eslint-disable` and keeps block
+ * disables paired with their enable. A whole-file disable at the top of a file
+ * is allowed unpaired. An `eslint-enable` needs no reason.
+ */
+const eslintCommentsConfig: Linter.Config[] = [
+  {
+    ...eslintComments.recommended,
+    name: 'gaia/eslint-comments',
+    rules: {
+      ...eslintComments.recommended.rules,
+      '@eslint-community/eslint-comments/disable-enable-pair': [
+        'error',
+        {allowWholeFile: true},
+      ],
+      '@eslint-community/eslint-comments/require-description': [
+        'error',
+        {ignore: ['eslint-enable']},
+      ],
+    },
   },
 ];
 
@@ -375,6 +408,7 @@ export const buildBase = (sourceDir: string): Linter.Config[] => [
   ...buildTsEslintConfig(sourceDir),
   ...buildImportXConfig(sourceDir),
   ...unusedDisableDirectivesConfig,
+  ...eslintCommentsConfig,
   ...preferArrowFunctionsConfig,
   ...restrictedSyntaxConfig,
   ...restrictedImportsConfig,

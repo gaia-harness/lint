@@ -1,6 +1,7 @@
 import path from 'node:path';
 import type {Linter} from 'eslint';
 import noRelativeImportPaths from 'eslint-plugin-no-relative-import-paths';
+import * as regexp from 'eslint-plugin-regexp';
 import sonarjs from 'eslint-plugin-sonarjs';
 import cnConditionalPlugin from '../plugins/cn-conditional.js';
 import noEnumPlugin from '../plugins/no-enum.js';
@@ -48,6 +49,16 @@ const buildSonarConfig = (sourceDir: string): Linter.Config[] => [
       'sonarjs/no-hardcoded-passwords': 'off',
     },
   },
+];
+
+/**
+ * Regex correctness. The recommended set catches patterns that can backtrack
+ * catastrophically on hostile input (ReDoS), alternatives and character
+ * classes that can never match, misleading capture groups, and needless
+ * escapes or quantifiers. sonarjs covers only a few of these.
+ */
+const regexpConfig: Linter.Config[] = [
+  {...regexp.configs['flat/recommended'], name: 'regexp'},
 ];
 
 const cnConditionalConfig: Linter.Config[] = [
@@ -268,6 +279,7 @@ const buildNoRelativeImportPathsConfig = (
 
 export const buildGuardrails = (sourceDir: string): Linter.Config[] => [
   ...buildSonarConfig(sourceDir),
+  ...regexpConfig,
   ...cnConditionalConfig,
   ...noEnumConfig,
   ...noJsxIifeConfig,

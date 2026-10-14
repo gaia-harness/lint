@@ -179,7 +179,7 @@ describe('style hygiene naming conventions', () => {
 
   it('keeps the disable directive in app/state/index.tsx used', async () => {
     const result = await lintFile(
-      `/* eslint-disable canonical/filename-match-exported */\n${component('State')}`,
+      `/* eslint-disable canonical/filename-match-exported -- state barrel */\n${component('State')}`,
       'app/state/index.tsx',
     );
     expect(result.messages).toEqual([]);

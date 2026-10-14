@@ -81,6 +81,10 @@ const VENDORED_UI_RULES_OFF: Linter.RulesRecord = {
   'prettier/prettier': 'off',
   // Prop names such as `inset` (dropdown-menu).
   'react/boolean-prop-naming': 'off',
+  // button.tsx exports `buttonVariants` and toast.tsx exports its toast
+  // manager beside their components. A hot update of either falls back to a
+  // full reload, which costs dev time only.
+  'react-refresh/only-export-components': 'off',
   'sonarjs/prefer-read-only-props': 'off',
   // The `e` handler parameter in input-group.tsx.
   'unicorn/prevent-abbreviations': 'off',

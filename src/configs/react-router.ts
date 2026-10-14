@@ -1,5 +1,28 @@
 import type {Linter} from 'eslint';
 import noImperativeQueryFetchPlugin from '../plugins/no-imperative-query-fetch.js';
+import {ONLY_EXPORT_COMPONENTS_OPTIONS} from './react.js';
+
+/**
+ * The named exports React Router reads from a route module. Its Vite plugin
+ * hot-updates these alongside the component, so they do not cost a full
+ * reload.
+ */
+const ROUTE_MODULE_EXPORTS = [
+  'action',
+  'clientAction',
+  'clientLoader',
+  'clientMiddleware',
+  'ErrorBoundary',
+  'handle',
+  'headers',
+  'HydrateFallback',
+  'Layout',
+  'links',
+  'loader',
+  'meta',
+  'middleware',
+  'shouldRevalidate',
+];
 
 /**
  * React Router flat-config block. Optional, and required only for projects
@@ -30,6 +53,10 @@ import noImperativeQueryFetchPlugin from '../plugins/no-imperative-query-fetch.j
  * `useSuspenseQuery`. That idiom is React Router's, which is why the rule
  * lives here. It reports on any member call by name, so it needs no TanStack
  * Query install to fire.
+ *
+ * Route modules, and `root.tsx` (the root route), may also export React
+ * Router's route-module names (`loader`, `action`, `meta`, ...) beside their
+ * component without tripping `react-refresh/only-export-components`.
  */
 export const buildReactRouter = (sourceDir: string): Linter.Config[] => [
   {
@@ -37,6 +64,17 @@ export const buildReactRouter = (sourceDir: string): Linter.Config[] => [
     name: 'react-router/routes',
     rules: {
       'no-empty-pattern': 'off',
+    },
+  },
+  {
+    files: ['**/routes/**/*.tsx', `${sourceDir}/root.tsx`],
+    ignores: ['**/*.test.tsx', '**/*.stories.tsx', '**/tests/**'],
+    name: 'react-router/route-module-exports',
+    rules: {
+      'react-refresh/only-export-components': [
+        'error',
+        {...ONLY_EXPORT_COMPONENTS_OPTIONS, allowExportNames: ROUTE_MODULE_EXPORTS},
+      ],
     },
   },
   {

@@ -189,3 +189,23 @@ describe('import-x/architecture-boundaries data-endpoint carve-out', () => {
     });
   });
 });
+
+describe('regexp', () => {
+  const linter = new Linter();
+  const regexpBlock = findBlock(buildGuardrails('app'), 'regexp');
+
+  const ruleIdsFor = (code: string): (string | null)[] =>
+    linter
+      .verify(code, [{...regexpBlock, files: ['**/*.js']}], 'probe.js')
+      .map((message) => message.ruleId);
+
+  test('a catastrophically backtracking pattern is reported', () => {
+    expect(ruleIdsFor('export const pattern = /^(a+)+$/;\n')).toContain(
+      'regexp/no-super-linear-backtracking',
+    );
+  });
+
+  test('a safe pattern passes', () => {
+    expect(ruleIdsFor('export const pattern = /^a+$/;\n')).toEqual([]);
+  });
+});

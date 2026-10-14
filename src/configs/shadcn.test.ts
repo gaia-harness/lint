@@ -335,6 +335,13 @@ describe('vendored-ui exemption', () => {
     expect(await severityOf(eslint, UI_TEST_FILE, rule)).toBe(2);
   });
 
+  it('react-refresh/only-export-components is off in vendored ui and on in components', async () => {
+    const eslint = createLinter(undefined, true);
+    const rule = 'react-refresh/only-export-components';
+    expect(await severityOf(eslint, UI_FILE, rule)).toBe(0);
+    expect(await severityOf(eslint, COMPONENT_FILE, rule)).toBe(2);
+  });
+
   it('shadcn/no-raw-colors and react-hooks rules stay on in vendored ui', async () => {
     const eslint = defaultLinter();
 
