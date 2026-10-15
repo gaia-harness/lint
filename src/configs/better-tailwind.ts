@@ -25,7 +25,12 @@ export const betterTailwind = (
       'better-tailwindcss': betterTailwindPlugin,
     },
     rules: {
-      'better-tailwindcss/enforce-canonical-classes': 'error',
+      // rootFontSize lets a px arbitrary value canonicalize to its scale step
+      // (`w-[16px]` to `w-4`).
+      'better-tailwindcss/enforce-canonical-classes': [
+        'error',
+        {rootFontSize: 16},
+      ],
       'better-tailwindcss/enforce-consistent-important-position': 'error',
       'better-tailwindcss/enforce-consistent-variable-syntax': 'error',
       'better-tailwindcss/enforce-shorthand-classes': 'error',

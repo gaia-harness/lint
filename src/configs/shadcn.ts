@@ -32,6 +32,12 @@ export type GaiaLintShadcnOptions = {
 const SOURCE_EXTENSIONS = '{js,jsx,ts,tsx}';
 
 /**
+ * A class whose arbitrary value is a color literal: hex, a CSS color function,
+ * or a `color:` type hint.
+ */
+const ARBITRARY_COLOR_PATTERN = String.raw`^.*\[(#|rgba?\(|hsla?\(|oklch\(|oklab\(|lab\(|lch\(|color:).*\]$`;
+
+/**
  * Rules turned off for vendored ui files because shadcn's registry output
  * trips them. The list is the empirical one: every rule that fired on
  * unedited `shadcn add` output for the files GAIA ships plus a wider sample of
@@ -113,8 +119,8 @@ const VENDORED_UI_RULES_OFF: Linter.RulesRecord = {
     'error',
     {paths: RESTRICTED_IMPORT_PATHS.filter((entry) => entry.name !== 'react')},
   ],
-  // shadcn classes use arbitrary values such as `grid-cols-[auto_1fr]`.
-  'shadcn/no-arbitrary-values': 'off',
+  // Registry items may carry an arbitrary color the token contract bans.
+  'better-tailwindcss/no-restricted-classes': 'off',
   // sonner.tsx sets CSS variables through a `style` object.
   'shadcn/no-inline-styles': 'off',
   // The vendored files compose each other with `className`.
@@ -130,9 +136,10 @@ const VENDORED_UI_RULES_OFF: Linter.RulesRecord = {
  * - `shadcn/settings`: no `files`; registers the plugin and sets
  *   `settings.shadcn.ui` at root level.
  * - `shadcn/rules`: source files; `no-raw-colors`, `require-static-classes`,
- *   `no-arbitrary-values`, `no-inline-styles` error, `no-restyle` error with
- *   `{allow: ['layout']}`, `no-unknown-classes` off (better-tailwindcss's
- *   `no-unknown-classes` stays the only unknown-class rule).
+ *   `no-inline-styles` error, `no-restyle` error with `{allow: ['layout']}`,
+ *   `no-arbitrary-values` and `no-unknown-classes` off (better-tailwindcss's
+ *   `no-unknown-classes` stays the only unknown-class rule), and
+ *   `better-tailwindcss/no-restricted-classes` banning arbitrary colors.
  * - `shadcn/vendored-ui`: `uiFiles` only; `prettier/prettier` and the house
  *   style rules (plus a short maintainer-sanctioned list of correctness-class
  *   rules the shadcn source trips) off. `shadcn/no-raw-colors`, `react-hooks/*`
@@ -166,7 +173,22 @@ export const buildShadcn = (
       files: [`${sourceDir}/**/*.${SOURCE_EXTENSIONS}`],
       name: 'shadcn/rules',
       rules: {
-        'shadcn/no-arbitrary-values': 'error',
+        // An arbitrary value is allowed where no scale step or token fits;
+        // `enforce-canonical-classes` still rewrites one that has a scale
+        // equivalent. An arbitrary color is banned: colors are role tokens.
+        'better-tailwindcss/no-restricted-classes': [
+          'error',
+          {
+            restrict: [
+              {
+                message:
+                  'Arbitrary colors are not allowed; use a theme role token.',
+                pattern: ARBITRARY_COLOR_PATTERN,
+              },
+            ],
+          },
+        ],
+        'shadcn/no-arbitrary-values': 'off',
         'shadcn/no-inline-styles': 'error',
         'shadcn/no-raw-colors': 'error',
         'shadcn/no-restyle': ['error', {allow: ['layout']}],
