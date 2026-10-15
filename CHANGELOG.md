@@ -1,5 +1,11 @@
 # @gaia-react/lint
 
+## 3.0.0-rc.7
+
+### Minor Changes
+
+- [#70](https://github.com/gaia-react/lint/pull/70) [`751e0ed`](https://github.com/gaia-react/lint/commit/751e0ed82c604597385ca3c1c042feab8261e546) Thanks [@stevensacks](https://github.com/stevensacks)! - Changed: `shadcn` allows an arbitrary value where no scale step or token fits (`grid-cols-[auto_1fr]`, `bg-size-[200%_100%]`); `shadcn/no-arbitrary-values` is off. `betterTailwind` sets `rootFontSize: 16` on `enforce-canonical-classes`, so an arbitrary value that has a scale equivalent is rewritten to it (`w-[16px]` to `w-4`). Arbitrary colors stay banned through `better-tailwindcss/no-restricted-classes`, since every color is a theme role token; vendored ui files are exempt.
+
 ## 3.0.0-rc.6
 
 ### Patch Changes
