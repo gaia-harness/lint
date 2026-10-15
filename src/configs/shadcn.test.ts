@@ -184,12 +184,42 @@ describe('shadcn token rules', () => {
     expect(ids).toContain('shadcn/no-raw-colors');
   });
 
-  it('no-arbitrary-values errors outside ui and is off in vendored ui', async () => {
+  it.each([
+    'bg-size-[200%_100%]',
+    'grid-cols-[auto_1fr]',
+    'pl-[2.3rem]',
+  ])('an arbitrary value with no scale step lints clean: %s', async (className) => {
+    const ids = await lintFile(
+      defaultLinter(),
+      component(className),
+      COMPONENT_FILE,
+    );
+    expect(ids).toEqual([]);
+  });
+
+  it('an arbitrary value with a scale step is rewritten to it', async () => {
     const eslint = defaultLinter();
-    const outside = await lintFile(eslint, component('pl-[2.3rem]'), COMPONENT_FILE);
-    const inside = await lintFile(eslint, component('pl-[2.3rem]'), UI_FILE);
-    expect(outside).toContain('shadcn/no-arbitrary-values');
-    expect(inside).not.toContain('shadcn/no-arbitrary-values');
+
+    for (const className of ['w-[16px]', 'mt-[1rem]']) {
+      const ids = await lintFile(eslint, component(className), COMPONENT_FILE);
+      expect(ids, className).toContain(
+        'better-tailwindcss/enforce-canonical-classes',
+      );
+    }
+  });
+
+  it.each([
+    'bg-[#ff0000]',
+    'text-[rgb(0_0_0)]',
+    'border-[hsl(0_0%_0%)]',
+    'text-[oklch(0.5_0.1_200)]',
+    'bg-[color:var(--brand)]',
+  ])('an arbitrary color errors outside ui and in ui/tests, never in vendored ui: %s', async (className) => {
+    const eslint = defaultLinter();
+    const rule = 'better-tailwindcss/no-restricted-classes';
+    expect(await lintFile(eslint, component(className), COMPONENT_FILE)).toContain(rule);
+    expect(await lintFile(eslint, component(className), UI_TEST_FILE)).toContain(rule);
+    expect(await lintFile(eslint, component(className), UI_FILE)).not.toContain(rule);
   });
 
   it('require-static-classes errors outside ui and is off in vendored ui', async () => {
@@ -211,14 +241,13 @@ describe('shadcn token rules', () => {
     expect(inside).not.toContain('shadcn/no-inline-styles');
   });
 
-  it('no-arbitrary-values and no-inline-styles stay on in ui/tests', async () => {
-    const eslint = defaultLinter();
-    const arbitrary = await lintFile(
-      eslint,
-      component('pl-[2.3rem]'),
+  it('no-inline-styles stays on in ui/tests', async () => {
+    const ids = await lintFile(
+      defaultLinter(),
+      'export const X = () => <div style={{minWidth: 4}} />;\n',
       UI_TEST_FILE,
     );
-    expect(arbitrary).toContain('shadcn/no-arbitrary-values');
+    expect(ids).toContain('shadcn/no-inline-styles');
   });
 });
 

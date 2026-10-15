@@ -344,10 +344,15 @@ and nothing shadcn-related loads.
 Blocks it returns:
 
 - `shadcn/settings`: no `files`; registers the plugin and sets `settings.shadcn.ui`.
-- `shadcn/rules`: source files. `shadcn/no-raw-colors`, `shadcn/require-static-classes`,
-  `shadcn/no-arbitrary-values` and `shadcn/no-inline-styles` are `error`;
-  `shadcn/no-restyle` is `['error', {allow: ['layout']}]`; `shadcn/no-unknown-classes`
-  is `off` because `better-tailwindcss/no-unknown-classes` (from `betterTailwind`)
+- `shadcn/rules`: source files. `shadcn/no-raw-colors`, `shadcn/require-static-classes`
+  and `shadcn/no-inline-styles` are `error`; `shadcn/no-restyle` is
+  `['error', {allow: ['layout']}]`. `shadcn/no-arbitrary-values` is `off`: an
+  arbitrary value is allowed where no scale step or token fits (`grid-cols-[auto_1fr]`),
+  and `better-tailwindcss/enforce-canonical-classes` (with `rootFontSize: 16`)
+  rewrites one that has a scale equivalent (`w-[16px]` to `w-4`). An arbitrary
+  color (hex, a CSS color function, a `color:` hint) is an error through
+  `better-tailwindcss/no-restricted-classes`, since colors are role tokens.
+  `shadcn/no-unknown-classes` is `off` because `better-tailwindcss/no-unknown-classes` (from `betterTailwind`)
   stays the only unknown-class rule. A marker class a library applies, such as
   sonner's `toaster`, is cleared through `betterTailwind({ignore: ['toaster']})`.
 - `shadcn/vendored-ui`: the `uiFiles` only. See below.
@@ -367,8 +372,9 @@ never rewrites a vendored file: `prettier/prettier`, `@stylistic/quotes`,
 `prefer-arrow-functions`, the `perfectionist` sort rules, `canonical`,
 `unicorn/prevent-abbreviations`, `sonarjs/prefer-read-only-props`, the
 better-tailwindcss canonical and shorthand rewrites, naming rules and the
-other style rules the registry output trips, plus `shadcn/no-arbitrary-values`,
-`shadcn/no-inline-styles` and `shadcn/no-restyle`. Seven correctness-class
+other style rules the registry output trips, plus the arbitrary-color ban
+(`better-tailwindcss/no-restricted-classes`), `shadcn/no-inline-styles` and
+`shadcn/no-restyle`. Seven correctness-class
 rules the shadcn source itself trips are also off there, each commented in the
 block: `@typescript-eslint/no-unnecessary-condition`, `eqeqeq`,
 `react/no-array-index-key`, `jsx-a11y/label-has-associated-control`,
