@@ -5,6 +5,7 @@
     "@gaia-react/lint": "2.3.0"
   },
   "changesets": [
+    "allow-arbitrary-values",
     "deps-dead-rules",
     "deps-refresh-oct-2",
     "deps-refresh-oct",

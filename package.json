@@ -1,6 +1,6 @@
 {
   "name": "@gaia-react/lint",
-  "version": "3.0.0-rc.6",
+  "version": "3.0.0-rc.7",
   "description": "GAIA's opinionated lint configuration.",
   "type": "module",
   "main": "./dist/index.js",
