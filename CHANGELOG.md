@@ -1,5 +1,58 @@
 # @gaia-react/lint
 
+## 3.0.0
+
+### Major Changes
+
+- [#61](https://github.com/gaia-react/lint/pull/61) [`1d66414`](https://github.com/gaia-react/lint/commit/1d6641435c3ea87c4c3d85319c04caae2c57cd1e) Thanks [@stevensacks](https://github.com/stevensacks)! - Removed: the `testing-library` block and the `eslint-plugin-testing-library` dependency. GAIA tests run in Vitest browser mode (`vitest-browser-react`, `page` locators), where Testing Library's rules no longer apply and `prefer-screen-queries` false-positives on `page.getByRole`. Delete any `eslint-disable` comments that name a `testing-library/*` rule. The jest-dom rules stay, because stories still assert with the jest-dom matchers that `storybook/test` re-exports.
+
+- [#54](https://github.com/gaia-react/lint/pull/54) [`fa0b343`](https://github.com/gaia-react/lint/commit/fa0b343b9504756f24591bf12df4d6ed27cb16ef) Thanks [@stevensacks](https://github.com/stevensacks)! - Breaking: the `styleHygiene` naming rules now enforce GAIA's kebab-case layout. Component and page folders are kebab-case, `components/ui/` holds flat kebab-case component files with `tests/` as its only subfolder, a route page is `pages/<path>/page.tsx` exporting `<Name>Page`, and hook files are `use-*.ts`. `canonical/filename-match-exported` applies a kebab transform to component and page `.tsx` files, so `theme-switch/index.tsx` exports `ThemeSwitch`; everywhere else it keeps exact matching. PascalCase component folders and camelCase hook files now fail lint, so rename them before upgrading.
+
+- [#56](https://github.com/gaia-react/lint/pull/56) [`9d48fbc`](https://github.com/gaia-react/lint/commit/9d48fbc94e9407cec9875aa51a862ced82518d28) Thanks [@stevensacks](https://github.com/stevensacks)! - Breaking: importing `FC` or `FunctionComponent` from `react` is now an error everywhere, including test and story files. Type props inline instead: `type ButtonProps = {...}; const Button = ({...}: ButtonProps) => ...`.
+
+  Added: the opt-in `shadcn()` factory bundles `@shadcn/lint` (exact-pinned) so role tokens are the only color vocabulary. It sets `shadcn/no-raw-colors`, `shadcn/require-static-classes`, `shadcn/no-arbitrary-values` and `shadcn/no-inline-styles` to error, `shadcn/no-restyle` to error with `allow: ['layout']`, and `shadcn/no-unknown-classes` off in favor of better-tailwindcss's `no-unknown-classes`. Its vendored-ui block turns Prettier and the house-style rules off for `components/ui/*.tsx` (registry output stays byte-identical to `shadcn add`) while `shadcn/no-raw-colors`, `react-hooks/*` and the other correctness rules stay on, and `components/ui/tests/**` stays fully linted. Spread `...lint.shadcn({ui: '~/components/ui'})` as the last entry, after the full GAIA composition and `...lint.prettier`.
+
+  The `eslint` peer floor rises from `^9.0.0` to `^9.30.0`, which `@shadcn/lint` requires. `@shadcn/lint` also pulls a dev-only copy of the `cn` package.
+
+### Minor Changes
+
+- [#70](https://github.com/gaia-react/lint/pull/70) [`751e0ed`](https://github.com/gaia-react/lint/commit/751e0ed82c604597385ca3c1c042feab8261e546) Thanks [@stevensacks](https://github.com/stevensacks)! - Changed: `shadcn` allows an arbitrary value where no scale step or token fits (`grid-cols-[auto_1fr]`, `bg-size-[200%_100%]`); `shadcn/no-arbitrary-values` is off. `betterTailwind` sets `rootFontSize: 16` on `enforce-canonical-classes`, so an arbitrary value that has a scale equivalent is rewritten to it (`w-[16px]` to `w-4`). Arbitrary colors stay banned through `better-tailwindcss/no-restricted-classes`, since every color is a theme role token; vendored ui files are exempt.
+
+- [#65](https://github.com/gaia-react/lint/pull/65) [`cd7d1d9`](https://github.com/gaia-react/lint/commit/cd7d1d907493d9e1185d7e341b84fdfce07a8c74) Thanks [@stevensacks](https://github.com/stevensacks)! - Added: four rule sets that close gaps in the bundle.
+
+  - `base` turns on the type-aware `@typescript-eslint/no-unsafe-call`, `no-unsafe-member-access`, `no-unsafe-argument`, `no-deprecated` and `no-unnecessary-type-conversion`, completing the `no-unsafe-*` family. Tests and stories keep the `no-unsafe-*` relaxation they already had.
+  - `base` adds `@eslint-community/eslint-comments`: every `eslint-disable` must give a reason after `--` (`// eslint-disable-next-line no-console -- startup banner`), a bare blanket `eslint-disable` is banned, and block disables must be paired with an enable unless they cover the whole file.
+  - `guardrails` adds `eslint-plugin-regexp`'s recommended set, which catches patterns that backtrack catastrophically (ReDoS), alternatives that can never match and needless escapes.
+  - `react` adds `react-refresh/only-export-components`, so a component module that also exports non-components, which breaks Fast Refresh, is reported. `reactRouter` allows React Router's route-module exports (`loader`, `action`, `meta`, ...) in route modules and `root.tsx`, and the `shadcn` vendored-ui exemption turns the rule off for registry files.
+
+  Action required on upgrade: add a `-- reason` to each `eslint-disable` that lacks one, and move any non-component export out of a component module.
+
+- [#66](https://github.com/gaia-react/lint/pull/66) [`8a1ecf4`](https://github.com/gaia-react/lint/commit/8a1ecf4ddcf11ae827c1676150792e0932672fe9) Thanks [@stevensacks](https://github.com/stevensacks)! - Added: `react` reports Effects that should not be Effects (`react-you-might-not-need-an-effect`: state derived from other state or props, user-event logic in an Effect, chained updates, notifying a parent, resetting state on a prop change instead of using `key`). It also adds nine `@eslint-react` rules: an Effect that adds a listener, timer, interval, observer or fetch must clean it up, and React 19 forms replace `forwardRef`, `useContext` and `<Context.Provider>`.
+
+  Added: two opt-in arrays. `lint.i18n` reports raw JSX text that should come from `t()`; spread it only if the UI is translated. `lint.zod` turns on `eslint-plugin-zod`'s recommended rules for Zod 4 projects, minus `consistent-import`.
+
+  Changed: the `.length && <JSX/>` selector's comment now says that `sonarjs/jsx-no-leaked-render` already catches the general `count && <JSX/>` case.
+
+- [#63](https://github.com/gaia-react/lint/pull/63) [`f58c5ff`](https://github.com/gaia-react/lint/commit/f58c5ffb8740a0a0589252349bf68b407dc0b5b1) Thanks [@stevensacks](https://github.com/stevensacks)! - Added: `reactRouter` now carries `no-imperative-query-fetch/no-imperative-query-fetch`, on by default for every TypeScript file under the source dir. It bans `ensureQueryData`, `fetchQuery`, `prefetchQuery` and their infinite variants, so a route has one fetch idiom: `queryClient.query` awaited in a clientLoader, read with `useSuspenseQuery`. `reactRouter` now follows `sourceDir`. Fix any reported call by moving the fetch into the clientLoader.
+
+  Changed: `import-x/no-unresolved` ignores `^virtual:` imports, so Vite plugin virtual modules such as `virtual:msw` resolve, and checks case and CommonJS `require`. Under the source dir it now also covers `*.test.*` and `*.stories.*` files, where an unresolved import is the same defect. A project that carried a local `no-unresolved` override for either reason can delete it.
+
+### Patch Changes
+
+- [#57](https://github.com/gaia-react/lint/pull/57) [`c2e285f`](https://github.com/gaia-react/lint/commit/c2e285f4e228fd3261e0e1d775bb272ac1432366) Thanks [@stevensacks](https://github.com/stevensacks)! - Fixed: an unused `eslint-disable` directive now fails a plain `eslint` run at error severity (`linterOptions.reportUnusedDisableDirectives: 'error'`). The `eslint-comments/no-unused-disable` rule it replaces could never report, so the `@eslint-community/eslint-plugin-eslint-comments` dependency is removed. `unicorn/prefer-set-size` and `unicorn/no-blob-to-file` are now off: under the TypeScript parser they cannot report.
+
+  Updated: minor and patch releases of `eslint-plugin-perfectionist`, `eslint-plugin-playwright`, `eslint-plugin-sonarjs`, `eslint-plugin-storybook` and `eslint-plugin-no-relative-import-paths`.
+
+- [#68](https://github.com/gaia-react/lint/pull/68) [`83a68aa`](https://github.com/gaia-react/lint/commit/83a68aaf80d3810947d0f3627f7039c380dd01f5) Thanks [@stevensacks](https://github.com/stevensacks)! - Updated: `@shadcn/lint` to 0.2.1, `eslint-plugin-better-tailwindcss` to 4.9.0, `eslint-plugin-playwright` to 2.12.1 and `stylelint-order` to 8.1.2, and refreshed the lockfile.
+
+- [#61](https://github.com/gaia-react/lint/pull/61) [`1d66414`](https://github.com/gaia-react/lint/commit/1d6641435c3ea87c4c3d85319c04caae2c57cd1e) Thanks [@stevensacks](https://github.com/stevensacks)! - Updated: `eslint-config-airbnb-extended` to 3.3.0, `eslint-plugin-sonarjs` to 4.2.2 and `eslint-plugin-storybook` to 10.6.1. Refreshed the lockfile, which picks up patched transitive releases and clears most `pnpm audit` advisories. The dependency release-age window drops from 7 days to 3, matching GAIA.
+
+- [#72](https://github.com/gaia-react/lint/pull/72) [`fc8086c`](https://github.com/gaia-react/lint/commit/fc8086c078579f50daba171e3c92edabe30e1c18) Thanks [@stevensacks](https://github.com/stevensacks)! - Updated: `@eslint-react/eslint-plugin` to 5.26.1 and the pinned pnpm to 12.11.2, and refreshed the lockfile.
+
+- [#56](https://github.com/gaia-react/lint/pull/56) [`9d48fbc`](https://github.com/gaia-react/lint/commit/9d48fbc94e9407cec9875aa51a862ced82518d28) Thanks [@stevensacks](https://github.com/stevensacks)! - Fixed: the stylelint config no longer reports every Tailwind `@apply` under `at-rule-prelude-no-invalid`. Stylelint 17's standard config validates at-rule preludes as CSS, and `@apply` takes utility class names, so the rule now ignores `@apply` and still checks every standard at-rule.
+
+- [#59](https://github.com/gaia-react/lint/pull/59) [`3f29c02`](https://github.com/gaia-react/lint/commit/3f29c02f0a8dcc2d357e1071294515d7c5f68fd9) Thanks [@stevensacks](https://github.com/stevensacks)! - Fixed: `@typescript-eslint/prefer-destructuring` is off in vendored shadcn ui files. shadcn's `toast` component re-exports namespace members as `const a = Namespace.a`, which the rule reported on unedited `shadcn add` output.
+
 ## 3.0.0-rc.7
 
 ### Minor Changes
