@@ -1,5 +1,11 @@
 # @gaia-react/lint
 
+## 3.0.2
+
+### Patch Changes
+
+- [#77](https://github.com/gaia-react/lint/pull/77) [`12b5435`](https://github.com/gaia-react/lint/commit/12b54354a3c1e4dbb3cd53969474e5f2ad40adae) Thanks [@stevensacks](https://github.com/stevensacks)! - Updated dependencies: `@eslint-react/eslint-plugin` 5.28.1, `eslint-plugin-zod` 5.2.0, `@shadcn/lint` 0.2.3, `eslint-plugin-better-tailwindcss` 4.9.1, `eslint-plugin-prettier` 5.5.7 and `eslint-plugin-storybook` 10.6.2. The enabled rule set is unchanged.
+
 ## 3.0.1
 
 ### Patch Changes
