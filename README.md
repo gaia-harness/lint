@@ -338,7 +338,7 @@ and nothing shadcn-related loads.
 | Option            | Type       | Default                                | Description                                                                                                                           |
 | ----------------- | ---------- | -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
 | `ui`              | `string`   | `'~/components/ui'`                    | Import alias of the vendored ui folder, written to the root-level `settings.shadcn.ui` (never a rule option).                         |
-| `uiFiles`         | `string[]` | `[`${sourceDir}/components/ui/*.tsx`]` | Globs of the vendored ui files. Never matches `ui/tests/**`.                                                                          |
+| `uiFiles`         | `string[]` | `[`${sourceDir}/components/ui/*.tsx`]` plus the registry helpers | Globs of the vendored files: the ui folder plus the helpers `shadcn add` writes outside it (`hooks/use-mobile.ts`, `hooks/use-highlighted-code.ts`, `utils/highlighter.tsx`). Never matches `ui/tests/**`. |
 | `restyleOffFiles` | `string[]` | `[]`                                   | Fallback: globs outside ui where `shadcn/no-restyle` is off. Its block always ignores `${sourceDir}/components/ui/**`, so `ui/tests/**` stays covered. |
 
 Blocks it returns:
@@ -366,28 +366,22 @@ is spread before it. Spread it last, after `...lint.prettier`, so its
 
 ### Vendored ui policy
 
-Files in `components/ui/*.tsx` are registry output kept byte-identical to
-`shadcn add`. For them Prettier and the house-style rules are off, so lint
-never rewrites a vendored file: `prettier/prettier`, `@stylistic/quotes`,
-`prefer-arrow-functions`, the `perfectionist` sort rules, `canonical`,
-`unicorn/prevent-abbreviations`, `sonarjs/prefer-read-only-props`, the
-better-tailwindcss canonical and shorthand rewrites, naming rules and the
-other style rules the registry output trips, plus the arbitrary-color ban
-(`better-tailwindcss/no-restricted-classes`), `shadcn/no-inline-styles` and
-`shadcn/no-restyle`. Seven correctness-class
-rules the shadcn source itself trips are also off there, each commented in the
-block: `@typescript-eslint/no-unnecessary-condition`, `eqeqeq`,
-`react/no-array-index-key`, `jsx-a11y/label-has-associated-control`,
-`jsx-a11y/click-events-have-key-events`,
-`jsx-a11y/no-noninteractive-element-interactions` and
-`shadcn/require-static-classes`. `react-refresh/only-export-components` is off
-too, since `button.tsx` exports `buttonVariants` and `toast.tsx` exports its
-toast manager beside their components.
+Files in `components/ui/*.tsx`, and the helpers the registry writes outside
+that folder, are registry output kept byte-identical to `shadcn add`. The list
+of rules off for them covers the full shadcn registry: every rule that fires on
+unedited `shadcn add --all` output. Prettier and the house-style rules are off,
+so lint never rewrites a vendored file, and so are the correctness-class rules
+the shadcn source itself trips, each commented in `src/configs/shadcn.ts` with
+the stock file it covers. `jsx-a11y/anchor-has-content` is one of them:
+`PaginationLink` passes its anchor content through spread `children`, which the
+rule cannot see.
 
-Everything else stays on in vendored ui: `shadcn/no-raw-colors`, `react-hooks/*`,
-and every other correctness rule. `components/ui/tests/**` is GAIA-authored and
-stays fully linted. If a registry item you add trips a house-style rule not in
-the list, extend the block rather than editing the vendored file.
+Everything else stays on in vendored ui: `shadcn/no-raw-colors`,
+`react-hooks/rules-of-hooks`, `react-hooks/exhaustive-deps`, and every other
+correctness rule. `components/ui/tests/**` is GAIA-authored and stays fully
+linted, and so does any hook or util beside the registry helpers. If a later
+registry item trips a rule not in the list, extend the block rather than
+editing the vendored file.
 
 ## `FC` and `FunctionComponent` are banned
 

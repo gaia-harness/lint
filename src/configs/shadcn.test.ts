@@ -23,6 +23,30 @@ const PAGE_FILE = 'app/pages/index/page.tsx';
 const COMPONENT_FILE = 'app/components/x/index.tsx';
 const UI_FILE = 'app/components/ui/button.tsx';
 const UI_TEST_FILE = 'app/components/ui/tests/button.stories.tsx';
+const PAGINATION_FILE = 'app/components/ui/pagination.tsx';
+const VENDORED_HELPER_FILES = [
+  'app/hooks/use-highlighted-code.ts',
+  'app/hooks/use-mobile.ts',
+  'app/utils/highlighter.tsx',
+];
+
+// PaginationLink as `shadcn add pagination` writes it: the anchor's content
+// arrives through the spread props (`children`).
+const PAGINATION_LINK = `import * as React from "react"
+
+function PaginationLink({ isActive, ...props }: React.ComponentProps<"a"> & { isActive?: boolean }) {
+  return (
+    <a
+      aria-current={isActive ? "page" : undefined}
+      data-slot="pagination-link"
+      data-active={isActive}
+      {...props}
+    />
+  )
+}
+
+export { PaginationLink }
+`;
 
 const THEME_CSS = `:root {
   --background: oklch(1 0 0);
@@ -273,7 +297,7 @@ describe('shadcn settings and rule severities', () => {
     }
   });
 
-  it('no-unknown-classes is off for shadcn and an error for better-tailwindcss', async () => {
+  it('no-unknown-classes is off for shadcn and an error for better-tailwindcss outside vendored ui', async () => {
     const eslint = defaultLinter();
 
     for (const filePath of [COMPONENT_FILE, UI_FILE, UI_TEST_FILE]) {
@@ -281,11 +305,18 @@ describe('shadcn settings and rule severities', () => {
         await severityOf(eslint, filePath, 'shadcn/no-unknown-classes'),
         filePath,
       ).toBe(0);
+    }
+
+    for (const filePath of [COMPONENT_FILE, UI_TEST_FILE]) {
       expect(
         await severityOf(eslint, filePath, 'better-tailwindcss/no-unknown-classes'),
         filePath,
       ).toBe(2);
     }
+
+    expect(
+      await severityOf(eslint, UI_FILE, 'better-tailwindcss/no-unknown-classes'),
+    ).toBe(0);
   });
 
   it('no-restyle is an error with allow layout outside ui and off in vendored ui', async () => {
@@ -362,6 +393,83 @@ describe('vendored-ui exemption', () => {
     const eslint = createLinter(undefined, true);
     expect(await severityOf(eslint, UI_FILE, rule)).toBe(0);
     expect(await severityOf(eslint, UI_TEST_FILE, rule)).toBe(2);
+  });
+
+  it.each([
+    '@eslint-react/no-context-provider',
+    '@eslint-react/no-use-context',
+    '@stylistic/padding-line-between-statements',
+    '@typescript-eslint/no-confusing-void-expression',
+    '@typescript-eslint/no-import-type-side-effects',
+    '@typescript-eslint/no-shadow',
+    '@typescript-eslint/no-unnecessary-type-assertion',
+    '@typescript-eslint/prefer-nullish-coalescing',
+    '@typescript-eslint/restrict-template-expressions',
+    'arrow-body-style',
+    'better-tailwindcss/no-deprecated-classes',
+    'better-tailwindcss/no-unknown-classes',
+    'cn-conditional/cn-conditional',
+    'jsx-a11y/anchor-has-content',
+    'jsx-a11y/no-noninteractive-tabindex',
+    'object-shorthand',
+    'react-hooks/set-state-in-effect',
+    'react-you-might-not-need-an-effect/no-event-handler',
+    'react-you-might-not-need-an-effect/no-external-store-subscription',
+    'react-you-might-not-need-an-effect/no-initialize-state',
+    'react-you-might-not-need-an-effect/no-pass-data-to-parent',
+    'react/button-has-type',
+    'react/jsx-boolean-value',
+    'react/jsx-no-constructed-context-values',
+    'react/no-unstable-nested-components',
+    'sonarjs/no-redundant-optional',
+    'sonarjs/pseudo-random',
+    'unicorn/explicit-length-check',
+    'unicorn/no-document-cookie',
+    'unicorn/no-negated-condition',
+    'unicorn/prefer-string-replace-all',
+  ])('%s (full-registry sweep) is off in vendored ui and on in ui/tests', async (rule) => {
+    const eslint = createLinter(undefined, true);
+    expect(await severityOf(eslint, UI_FILE, rule)).toBe(0);
+    expect(await severityOf(eslint, UI_TEST_FILE, rule)).not.toBe(0);
+  });
+
+  // Off for stories and tsx by the base config, so each probe names a file
+  // where the rule is on outside vendored output.
+  it.each([
+    ['@typescript-eslint/explicit-module-boundary-types', 'app/hooks/use-mobile.ts', 'app/hooks/use-thing.ts'],
+    ['@typescript-eslint/no-unsafe-argument', UI_FILE, COMPONENT_FILE],
+    ['@typescript-eslint/no-unsafe-assignment', UI_FILE, COMPONENT_FILE],
+    ['@typescript-eslint/no-unsafe-member-access', UI_FILE, COMPONENT_FILE],
+  ])('%s (full-registry sweep) is off in %s and on in %s', async (rule, vendoredFile, ownFile) => {
+    const eslint = createLinter(undefined, true);
+    expect(await severityOf(eslint, vendoredFile, rule)).toBe(0);
+    expect(await severityOf(eslint, ownFile, rule)).toBe(2);
+  });
+
+  it('a stock pagination link lints clean in vendored ui; the same anchor fails elsewhere and in ui/tests', async () => {
+    const eslint = defaultLinter();
+    const rule = 'jsx-a11y/anchor-has-content';
+    expect(await lintFile(eslint, PAGINATION_LINK, PAGINATION_FILE)).not.toContain(rule);
+    expect(await lintFile(eslint, PAGINATION_LINK, COMPONENT_FILE)).toContain(rule);
+    expect(await lintFile(eslint, PAGINATION_LINK, UI_TEST_FILE)).toContain(rule);
+  });
+
+  it.each(VENDORED_HELPER_FILES)(
+    'the registry helper %s is vendored by default',
+    async (filePath) => {
+      const eslint = defaultLinter();
+      expect(await lintFile(eslint, NOT_ARROW, filePath)).not.toContain(
+        'prefer-arrow-functions/prefer-arrow-functions',
+      );
+      expect(
+        await severityOf(eslint, filePath, 'react-hooks/rules-of-hooks'),
+      ).toBe(2);
+    },
+  );
+
+  it('a GAIA-authored hook beside the registry helpers stays fully linted', async () => {
+    const ids = await lintFile(defaultLinter(), NOT_ARROW, 'app/hooks/use-thing.ts');
+    expect(ids).toContain('prefer-arrow-functions/prefer-arrow-functions');
   });
 
   it('react-refresh/only-export-components is off in vendored ui and on in components', async () => {
