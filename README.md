@@ -1,11 +1,11 @@
-# @gaia-react/lint
+# @gaia-harness/lint
 
 GAIA's lint configuration.
 
 ## Install
 
 ```sh
-pnpm add -D @gaia-react/lint eslint prettier typescript
+pnpm add -D @gaia-harness/lint eslint prettier typescript
 ```
 
 ## Quick start
@@ -14,7 +14,7 @@ The block below is the actual `eslint.config.mjs` shipped by GAIA. Copy it
 verbatim and adjust the override block at the bottom for your project.
 
 ```js
-import gaiaLint from '@gaia-react/lint';
+import gaiaLint from '@gaia-harness/lint';
 import {defineConfig} from 'eslint/config';
 
 const lint = gaiaLint();
@@ -143,7 +143,7 @@ export default defineConfig([
 dependencies** so consumers control their own versions and a single resolved
 copy of each is installed in `node_modules`. Every other plugin
 (`eslint-plugin-react`, `typescript-eslint`, `eslint-plugin-import-x`, etc.)
-ships as a direct `dependency` of `@gaia-react/lint` so consumers don't
+ships as a direct `dependency` of `@gaia-harness/lint` so consumers don't
 have to install or upgrade them individually.
 
 Supported versions:
@@ -505,7 +505,7 @@ This package follows SemVer.
 ## Prereleases
 
 3.0.0 ships first as `3.0.0-rc.N` on the `rc` dist-tag, for GAIA 2.0. Install
-it with `pnpm add -D @gaia-react/lint@rc`. The `latest` dist-tag stays on 2.x
+it with `pnpm add -D @gaia-harness/lint@rc`. The `latest` dist-tag stays on 2.x
 until GAIA 2.0.0 ships. The Release workflow publishes from `main` only, so a
 2.x hotfix is cut and published manually by the maintainer from the
 `release/2.x` branch.
