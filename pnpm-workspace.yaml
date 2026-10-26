@@ -5,8 +5,8 @@
 # Delay installs until a published version has had time to be vetted.
 # Value is in minutes; 4320 = 3 days. This mirrors the consuming GAIA app on
 # purpose: because this config can only ever pin dependencies that have already
-# cleared the 3-day window, every release of @gaia-react/lint installs cleanly
-# inside GAIA's own quarantine. GAIA exempts the @gaia-react/lint package itself
+# cleared the 3-day window, every release of @gaia-harness/lint installs cleanly
+# inside GAIA's own quarantine. GAIA exempts the @gaia-harness/lint package itself
 # from its release-age check, but NOT lint's transitive deps; enforcing the
 # window here is what keeps those deps pre-aged so no downstream exclusion is
 # needed.

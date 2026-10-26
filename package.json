@@ -1,5 +1,5 @@
 {
-  "name": "@gaia-react/lint",
+  "name": "@gaia-harness/lint",
   "version": "3.0.3",
   "description": "GAIA's opinionated lint configuration.",
   "type": "module",
@@ -102,15 +102,15 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/gaia-react/lint.git"
+    "url": "git+https://github.com/gaia-harness/lint.git"
   },
-  "homepage": "https://github.com/gaia-react/lint#readme",
+  "homepage": "https://github.com/gaia-harness/lint#readme",
   "bugs": {
-    "url": "https://github.com/gaia-react/lint/issues"
+    "url": "https://github.com/gaia-harness/lint/issues"
   },
   "keywords": [
     "gaia",
-    "gaia-react",
+    "gaia-harness",
     "eslint",
     "eslint-config",
     "flat-config",
