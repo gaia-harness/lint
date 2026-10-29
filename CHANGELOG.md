@@ -1,5 +1,11 @@
 # @gaia-react/lint
 
+## 3.0.4
+
+### Patch Changes
+
+- [#84](https://github.com/gaia-harness/lint/pull/84) [`2dc18ee`](https://github.com/gaia-harness/lint/commit/2dc18ee1ee3a131ea13b0b19f40c61aec66a1e77) Thanks [@stevensacks](https://github.com/stevensacks)! - Updated dependencies: `@eslint-react/eslint-plugin` 5.28.8, `@vitest/eslint-plugin` 1.6.28, `eslint-plugin-perfectionist` 5.13.0, `eslint-plugin-storybook` 10.6.4 and `eslint-plugin-zod` 5.2.2. The enabled rule set is unchanged.
+
 ## 3.0.3
 
 ### Patch Changes
