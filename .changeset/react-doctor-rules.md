@@ -15,7 +15,7 @@ Added: 125 curated rules from `eslint-plugin-react-doctor`, pinned to exactly 0.
 
 `no-giant-component` (over 300 lines) and `no-high-complexity-react-function` (over 15 cyclomatic or cognitive complexity) measure only components and hooks. They stand in for the sonarjs size and complexity rules, which stay off. `reactRouter` sets the `react-doctor` capability settings the router rules need to recognize route modules. See "react-doctor rules" in the README.
 
-Added: `@tanstack/eslint-plugin-query`, pinned to exactly 5.105.0, with its recommended rules in `reactRouter`'s Query block beside `no-imperative-query-fetch`. They match TanStack Query imports, so a project without Query sees nothing. `perfectionist/sort-objects` now leaves the object passed straight to `useMutation`, `useInfiniteQuery`, `useSuspenseInfiniteQuery` and `infiniteQueryOptions` unsorted, so the TanStack property-order rules own that order.
+Added: `@tanstack/eslint-plugin-query`, pinned to exactly 5.105.0, with its recommended rules in `reactRouter`'s Query block beside `no-imperative-query-fetch`. They match TanStack Query imports, so a project without Query sees nothing. In the object passed straight to `useMutation`, `perfectionist/sort-objects` keeps natural order but sorts `onError` and `onSettled` last. In the object passed to `useInfiniteQuery`, `useSuspenseInfiniteQuery` and `infiniteQueryOptions`, it sorts `getNextPageParam` and `getPreviousPageParam` last. Its autofix therefore produces the order the TanStack property-order rules require.
 
 Changed: `react/jsx-key` is back on (error), because Airbnb's non-strict React config turns it off and nothing else caught a list rendered without `key`.
 

@@ -473,3 +473,122 @@ describe('TanStack Query option order and perfectionist', () => {
     expect(await ruleIdsFor(code)).toContain('perfectionist/sort-objects');
   });
 });
+
+describe('perfectionist autofix of TanStack option objects', () => {
+  const fixer = new ESLint({
+    fix: true,
+    overrideConfig: [
+      ...lint.base,
+      ...lint.react,
+      ...lint.reactRouter,
+      ...lint.styleHygiene,
+      ...lint.guardrails,
+      ...UNTYPED,
+    ],
+    overrideConfigFile: true,
+  });
+
+  const TANSTACK_ORDER_RULES = [
+    '@tanstack/query/infinite-query-property-order',
+    '@tanstack/query/mutation-property-order',
+  ];
+
+  /**
+   * One option per line, so the fixed key order reads off the line starts
+   * whatever indentation the stylistic fixes settle on.
+   */
+  const call = (header: string, callee: string, keys: string[]): string =>
+    [
+      header,
+      '',
+      'export const probe = (load: () => Promise<number>) =>',
+      `  ${callee}({`,
+      ...keys.map((key) => `    ${key}: load,`),
+      '  });',
+      '',
+    ].join('\n');
+
+  const fixedKeysAndOrderRuleIds = async (
+    code: string,
+  ): Promise<{keys: string[]; orderRuleIds: string[]}> => {
+    const [fixed] = await fixer.lintText(code, {filePath: HOOK});
+    const output = fixed.output ?? code;
+    const keys = [...output.matchAll(/^\s+(\w+): load,$/gm)].map(
+      (match) => match[1],
+    );
+    const orderRuleIds = fixed.messages
+      .map((message) => message.ruleId ?? '')
+      .filter((ruleId) => TANSTACK_ORDER_RULES.includes(ruleId));
+    return {keys, orderRuleIds};
+  };
+
+  const QUERY_IMPORT =
+    "import {infiniteQueryOptions, useInfiniteQuery, useMutation, useSuspenseInfiniteQuery} from '@tanstack/react-query';";
+
+  test('useMutation: natural order with onError and onSettled last', async () => {
+    const {keys, orderRuleIds} = await fixedKeysAndOrderRuleIds(
+      call(QUERY_IMPORT, 'useMutation', [
+        'onSettled',
+        'onError',
+        'onSuccess',
+        'onMutate',
+        'mutationKey',
+        'mutationFn',
+      ]),
+    );
+    expect(keys).toEqual([
+      'mutationFn',
+      'mutationKey',
+      'onMutate',
+      'onSuccess',
+      'onError',
+      'onSettled',
+    ]);
+    expect(orderRuleIds).toEqual([]);
+  });
+
+  for (const callee of [
+    'useInfiniteQuery',
+    'useSuspenseInfiniteQuery',
+    'infiniteQueryOptions',
+  ]) {
+    test(`${callee}: natural order with the page-param getters last`, async () => {
+      const {keys, orderRuleIds} = await fixedKeysAndOrderRuleIds(
+        call(QUERY_IMPORT, callee, [
+          'getPreviousPageParam',
+          'queryKey',
+          'getNextPageParam',
+          'queryFn',
+          'initialPageParam',
+        ]),
+      );
+      expect(keys).toEqual([
+        'initialPageParam',
+        'queryFn',
+        'queryKey',
+        'getNextPageParam',
+        'getPreviousPageParam',
+      ]);
+      expect(orderRuleIds).toEqual([]);
+    });
+  }
+
+  test('a non-TanStack call keeps plain natural order', async () => {
+    const {keys} = await fixedKeysAndOrderRuleIds(
+      call("import {configure} from 'some-library';", 'configure', [
+        'onSettled',
+        'getNextPageParam',
+        'onError',
+        'mutationFn',
+        'queryFn',
+      ]),
+    );
+    expect(keys).toEqual([
+      'getNextPageParam',
+      'mutationFn',
+      'onError',
+      'onSettled',
+      'queryFn',
+    ]);
+  });
+});
