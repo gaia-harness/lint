@@ -14,10 +14,12 @@ import {mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync} from 'node:f
 import {createRequire} from 'node:module';
 import {tmpdir} from 'node:os';
 import path from 'node:path';
+import {pathToFileURL} from 'node:url';
 import {ESLint, type Linter} from 'eslint';
 import tseslint from 'typescript-eslint';
 import {afterAll, beforeAll, describe, expect, it} from 'vitest';
 import gaiaLint from '../index.js';
+import {REACT_DOCTOR_CAPABILITIES} from './react-doctor.js';
 
 const PAGE_FILE = 'app/pages/index/page.tsx';
 const COMPONENT_FILE = 'app/components/x/index.tsx';
@@ -568,6 +570,58 @@ describe('react-doctor shadcn rules', () => {
       .map(([rule, entry]) => `${rule} ${String(Array.isArray(entry) ? entry[0] : entry)}`)
       .sort();
     expect(curated).toMatchSnapshot();
+  });
+
+  // The plugin gates each rule on `settings['react-doctor'].capabilities`
+  // once that list is set: every entry in the rule's own `requires` must
+  // appear verbatim, or the rule silently reports nothing. So every rule the
+  // composition enables, in any block or file class, must find each of its
+  // `requires` in REACT_DOCTOR_CAPABILITIES. `requires` is read from the
+  // plugin's own rule metadata (the ESLint wrapper drops it, so it comes from
+  // the oxlint plugin the wrapper re-exports), never from a hand-copied list.
+  it('every enabled react-doctor rule has each capability it requires', async () => {
+    const eslint = defaultLinter();
+    const files = [
+      COMPONENT_FILE,
+      PAGE_FILE,
+      UI_FILE,
+      UI_TEST_FILE,
+      'app/root.tsx',
+      'app/routes/_public._index.tsx',
+      'app/hooks/use-probe.ts',
+      'app/services/items/queries.ts',
+      'app/components/x/tests/index.test.tsx',
+      'app/components/x/tests/index.stories.tsx',
+      '.playwright/e2e/probe.spec.ts',
+    ];
+    const enabled = new Set<string>();
+    for (const file of files) {
+      const config = (await eslint.calculateConfigForFile(file)) as Linter.Config;
+      for (const [rule, entry] of Object.entries(config.rules ?? {})) {
+        const severity = Array.isArray(entry) ? entry[0] : entry;
+        if (rule.startsWith('react-doctor/') && severity !== 0 && severity !== 'off') {
+          enabled.add(rule.slice('react-doctor/'.length));
+        }
+      }
+    }
+    expect(enabled.size).toBe(125);
+
+    const requireFromWrapper = createRequire(
+      createRequire(import.meta.url).resolve('eslint-plugin-react-doctor'),
+    );
+    const oxlintPlugin = (await import(
+      pathToFileURL(requireFromWrapper.resolve('oxlint-plugin-react-doctor')).href
+    )) as {default: {rules: Record<string, {requires?: string[]}>}};
+
+    const missing = [...enabled].flatMap((rule) =>
+      (oxlintPlugin.default.rules[rule]?.requires ?? [])
+        .filter((capability) => !REACT_DOCTOR_CAPABILITIES.includes(capability))
+        .map((capability) => `${rule} requires ${capability}`),
+    );
+    expect(missing).toEqual([]);
+    expect(
+      [...enabled].filter((rule) => oxlintPlugin.default.rules[rule] === undefined),
+    ).toEqual([]);
   });
 
   it('an icon-only Button without a label is reported', async () => {
