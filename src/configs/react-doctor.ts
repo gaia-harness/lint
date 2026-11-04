@@ -247,27 +247,45 @@ export const REACT_DOCTOR_SHADCN_RULES: Linter.RulesRecord = {
  * react-doctor's CLI detects them per project; the standalone plugin reads
  * them from settings. Without `react-router-framework` the react-router rules
  * never recognize a route module's named `loader`, `action` or
- * `ErrorBoundary` exports and report nothing. Once the list is set, a rule
- * runs only when every capability it `requires` appears verbatim (a version
- * entry such as `react-router:7.9` is a floor, not a range), so this names
- * each capability the curated rules require that a React Router
- * framework-mode project on React 19 and Tailwind has. `shadcn` and
- * `tanstack-query` are listed too: their rules match the components and hooks
- * they check by import, so they stay silent in a project without them.
+ * `ErrorBoundary` exports and report nothing.
+ *
+ * Once the list is set, a rule runs only when every entry in its `requires`
+ * appears here verbatim. A versioned entry such as `react-router:7.9` is a
+ * minimum-version claim ("at least 7.9"), matched as a literal string, never
+ * as a range: a project on React Router 8 must still list each lower floor a
+ * rule names. So the list carries every versioned entry the plugin uses that
+ * GAIA's stack floors satisfy (React Router 8, React 19.3, Tailwind 4, Zod 4),
+ * whether or not a curated rule needs it today, so a rule added later finds
+ * its floor. A rule whose `requires` is missing from this list stays silent
+ * with no error; a test in `shadcn.test.ts` reads each enabled rule's
+ * `requires` from the plugin's metadata and fails on any gap.
+ *
+ * `shadcn`, `base-ui` and `tanstack-query` are listed too: their rules match
+ * the components and hooks they check by import, so they stay silent in a
+ * project without that library.
  */
 export const REACT_DOCTOR_CAPABILITIES = [
+  'base-ui',
   'react',
+  'react:18',
   'react:19',
+  'react:19.2',
   'react-router',
   'react-router:6.4',
   'react-router:6.7',
+  'react-router:6.9',
   'react-router:7',
   'react-router:7.8',
   'react-router:7.9',
   'react-router:7.10',
+  'react-router:8',
   'react-router-framework',
   'shadcn',
   'ssr',
   'tailwind',
+  'tailwind:3.4',
+  'tailwind:4',
   'tanstack-query',
+  'zod',
+  'zod:4',
 ];
