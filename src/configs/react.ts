@@ -3,6 +3,10 @@ import {configs, plugins} from 'eslint-config-airbnb-extended';
 import reactRefresh from 'eslint-plugin-react-refresh';
 import youMightNotNeedAnEffect from 'eslint-plugin-react-you-might-not-need-an-effect';
 import type {ESLint, Linter} from 'eslint';
+import {
+  REACT_DOCTOR_PLUGINS,
+  REACT_DOCTOR_REACT_RULES,
+} from './react-doctor.js';
 
 /**
  * React flat-config block.
@@ -51,6 +55,12 @@ export const react: Linter.Config[] = [
       'react/jsx-curly-brace-presence': 'error',
       'react/jsx-filename-extension': 'off',
       'react/jsx-fragments': 'error',
+      // airbnb-extended's non-strict react config turns this off, and nothing
+      // else in the bundle catches a list rendered without `key`.
+      'react/jsx-key': [
+        'error',
+        {checkFragmentShorthand: true, warnOnDuplicates: true},
+      ],
       // off by default because it doesn't handle props onXyz function names correctly
       // turn this on from time to time to check for misnamed handlers elsewhere
       'react/jsx-handler-names': ['off', {checkLocalVariables: true}],
@@ -128,6 +138,17 @@ export const react: Linter.Config[] = [
       '@eslint-react/web-api-no-leaked-resize-observer': 'error',
       '@eslint-react/web-api-no-leaked-timeout': 'error',
     },
+  },
+  // Curated react-doctor rules (see `react-doctor.ts`, which groups them with
+  // the reason for each group): SSR and hydration hazards, invalid HTML,
+  // accessibility jsx-a11y misses, side effects in render and state updates,
+  // Effect lifecycle and teardown, render-path performance, reduced motion
+  // and font scaling, and component and hook size and complexity.
+  {
+    files: ['**/*.ts?(x)', '**/*.js?(x)'],
+    name: 'react-doctor/react',
+    plugins: REACT_DOCTOR_PLUGINS,
+    rules: REACT_DOCTOR_REACT_RULES,
   },
   {
     files: ['**/*.test.ts?(x)', '**/*.stories.ts?(x)'],

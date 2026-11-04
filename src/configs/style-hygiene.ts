@@ -103,6 +103,44 @@ const perfectionistConfig: Linter.Config[] = [
           type: 'natural',
         },
       ],
+      // TanStack Query reads option order for type inference: the
+      // `@tanstack/query/*-property-order` rules need `onMutate` before
+      // `onError` and `onSettled`, and `queryFn` before the page-param
+      // getters. Plain natural order puts those keys first, so in the object
+      // passed straight to the TanStack call they sort into a last group
+      // instead, natural order everywhere else in it. Every other object
+      // keeps `recommended-natural`'s sort.
+      'perfectionist/sort-objects': [
+        'error',
+        {
+          customGroups: [
+            {
+              elementNamePattern: '^(onError|onSettled)$',
+              groupName: 'after-on-mutate',
+            },
+          ],
+          groups: ['unknown', 'after-on-mutate'],
+          order: 'asc',
+          type: 'natural',
+          useConfigurationIf: {callingFunctionNamePattern: '^useMutation$'},
+        },
+        {
+          customGroups: [
+            {
+              elementNamePattern: '^(getNextPageParam|getPreviousPageParam)$',
+              groupName: 'after-query-fn',
+            },
+          ],
+          groups: ['unknown', 'after-query-fn'],
+          order: 'asc',
+          type: 'natural',
+          useConfigurationIf: {
+            callingFunctionNamePattern:
+              '^(infiniteQueryOptions|useInfiniteQuery|useSuspenseInfiniteQuery)$',
+          },
+        },
+        {order: 'asc', type: 'natural'},
+      ],
       'perfectionist/sort-jsx-props': [
         'error',
         {

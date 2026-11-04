@@ -67,17 +67,17 @@ new source root: no per-config override blocks needed.
 | Property         | Shape                            | Includes                                                                                                                                          | Required? |
 | ---------------- | -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- | --------- |
 | `base`           | `Linter.Config[]`                | JS recommended, TypeScript (typescript-eslint), `import-x`, unused-disable-directive reporting at error, `eslint-comments` (every disable states a reason), `prefer-arrow-functions`, lodash/underscore guard, `no-restricted-imports` (bans bare `@conform-to/zod`) | required  |
-| `react`          | `Linter.Config[]`                | `eslint-plugin-react`, `react-hooks`, `jsx-a11y`, `react-refresh` (Fast Refresh-safe exports), `react-you-might-not-need-an-effect` (Effect misuse), nine `@eslint-react` rules (Effect cleanup, React 19 forms), GAIA-specific React rules | required for React apps |
-| `reactRouter`    | `Linter.Config[]`                | Relaxations for React Router framework mode, route-module exports allowed by `react-refresh`, plus `no-imperative-query-fetch` (custom). Spread **after** `react`. See [Router-specific rules](#router-specific-rules) | React Router only |
+| `react`          | `Linter.Config[]`                | `eslint-plugin-react`, `react-hooks`, `jsx-a11y`, `react-refresh` (Fast Refresh-safe exports), `react-you-might-not-need-an-effect` (Effect misuse), nine `@eslint-react` rules (Effect cleanup, React 19 forms), 77 curated `react-doctor` rules (SSR and hydration, HTML validity, accessibility, render and Effect correctness, performance, motion, component size and complexity), GAIA-specific React rules. See [react-doctor rules](#react-doctor-rules) | required for React apps |
+| `reactRouter`    | `Linter.Config[]`                | Relaxations for React Router framework mode, route-module exports allowed by `react-refresh`, plus a TanStack Query block (`no-imperative-query-fetch` (custom), `@tanstack/eslint-plugin-query` recommended, five `react-doctor` Query rules) and 25 curated `react-doctor` router rules with the capability settings they need. Spread **after** `react`. See [Router-specific rules](#router-specific-rules) | React Router only |
 | `styleHygiene`   | `Linter.Config[]`                | `canonical`, `perfectionist`, `unicorn`, `unused-imports`, `check-file`                                                                           | required  |
-| `guardrails`     | `Linter.Config[]`                | `regexp` (recommended, ReDoS included), `no-enum` (custom), `no-switch` (custom), `no-jsx-iife` (custom), `no-null-render` (custom), `no-zod-enum` (custom), `cn-conditional` (custom), `no-relative-import-paths`, `sonarjs`, `import-x`, `prefer-arrow-functions` | required  |
+| `guardrails`     | `Linter.Config[]`                | `regexp` (recommended, ReDoS included), `no-enum` (custom), `no-switch` (custom), `no-jsx-iife` (custom), `no-null-render` (custom), `no-zod-enum` (custom), `cn-conditional` (custom), `no-relative-import-paths`, `sonarjs`, `import-x`, `prefer-arrow-functions`, 14 curated `react-doctor` security and defensive-JS rules | required  |
 | `i18n`           | `Linter.Config[]`                | `i18next/no-literal-string` on raw JSX text under the source dir. See [i18n and Zod](#i18n-and-zod)                                              | optional  |
 | `zod`            | `Linter.Config[]`                | `eslint-plugin-zod` recommended, minus `consistent-import`. See [i18n and Zod](#i18n-and-zod)                                                    | optional  |
 | `testing`        | `Linter.Config[]`                | Vitest + jest-dom config scoped to `*.test.*`, `*.stories.*` and `test/`                                                                          | optional  |
 | `storybook`      | `Linter.Config[]`                | `eslint-plugin-storybook` scoped to `*.stories.*` and `.storybook/main.*`                                                                          | optional  |
 | `playwright`     | `Linter.Config[]`                | `eslint-plugin-playwright` scoped to `.playwright/`                                                                                                | optional  |
 | `prettier`       | `Linter.Config[]`                | `eslint-config-prettier`, must be **last** to disable formatting rules                                                                           | required if using Prettier |
-| `shadcn`         | `(opts?) => Linter.Config[]`     | `@shadcn/lint` token rules plus the vendored-ui exemption; see [shadcn factory](#shadcn-factory). Spread **last**, after `prettier`, with the full GAIA composition before it | optional  |
+| `shadcn`         | `(opts?) => Linter.Config[]`     | `@shadcn/lint` token rules, four curated `react-doctor` composition rules, plus the vendored-ui exemption; see [shadcn factory](#shadcn-factory). Spread **last**, after `prettier`, with the full GAIA composition before it | optional  |
 | `betterTailwind` | `(opts) => Linter.Config[]`      | `eslint-plugin-better-tailwindcss` factory; takes `entryPoint` (path to Tailwind entry CSS) and optional `ignore` (class names to skip)           | optional  |
 | `ignores`        | `Iterable<Linter.Config> & ((opts?) => Linter.Config[])` | `includeIgnoreFile` helper plus GAIA defaults. Spread directly for defaults (`...lint.ignores`) or call with options to override (`...lint.ignores({extra: ['.gaia/**']})`). | recommended |
 
@@ -286,6 +286,29 @@ module is still reported; move it to its own module.
 The `/.react-router/**` glob stays in the `ignores` defaults. It names a
 directory that only exists in a React Router project, so it costs other
 projects nothing.
+
+## react-doctor rules
+
+125 rules from [`eslint-plugin-react-doctor`](https://www.react.doctor/docs/configuration/eslint-and-oxlint-plugins), chosen one by one; no preset is spread. The presets turn back on rules this config turns off on purpose and carry hundreds of rules for libraries it does not cover. The plugin is pinned to an exact version because its rule set changes between releases, and ESLint fails a config that names a rule the installed plugin no longer ships. Every curated id and severity lives in `src/configs/react-doctor.ts`, grouped with the reason for each group, and a snapshot test pins the full list.
+
+| Block | Groups |
+| --- | --- |
+| `react` (77) | SSR and hydration, HTML validity, accessibility, render and state purity, Effect lifecycle, performance (including images and scripts), motion and font, component and hook size and complexity |
+| `reactRouter` (30) | 24 framework-mode rules (loaders, actions, middleware, sessions, cookies, search params, navigation, error UI, the server entry); five Query rules in the Query block; `no-unguarded-browser-global-at-module-scope` on source files only, not tests or stories |
+| `guardrails` (14) | auth tokens in web storage, secrets in client code, dynamic `RegExp` input, path containment, `window.open` without `noopener`, throwing and NaN-producing parses, and similar |
+| `shadcn()` (4) | icon Button label, DialogContent title, InputGroup controls, TabsTrigger inside TabsList |
+
+The vendored shadcn ui files skip the four shadcn rules (they check how GAIA code composes the primitives) and the three motion and font rules (registry classes).
+
+`no-giant-component` reports a component over 300 lines. `no-high-complexity-react-function` reports a component or `use*` hook over 15 cyclomatic or cognitive complexity. Both thresholds are fixed upstream. They stand in for the sonarjs size and complexity rules, which stay off because they do not model components and hooks.
+
+`reactRouter` also sets `settings['react-doctor'].capabilities`. The react-doctor CLI detects these per project; the standalone plugin reads them from settings, and without `react-router-framework` the router rules never recognize a route module's named exports. Once the list is set, a rule runs only when every capability it requires is listed verbatim, so an override that adds a react-doctor rule may need to extend the list.
+
+### TanStack Query
+
+`reactRouter`'s Query block also enables `@tanstack/eslint-plugin-query`'s recommended rules, read from its flat preset, beside `no-imperative-query-fetch`. They match TanStack Query imports, so a project without Query sees nothing. react-doctor's `query-no-rest-destructuring`, `query-stable-query-client` and `query-no-void-query-fn` stay off because the official plugin owns them. TanStack's property-order rules need `onMutate` before `onError` and `queryFn` before the page-param getters, which alphabetical order breaks. So in the object passed straight to those calls, `perfectionist/sort-objects` keeps natural order but sorts those late-binding keys into a last group: `onError` and `onSettled` for `useMutation`; `getNextPageParam` and `getPreviousPageParam` for `useInfiniteQuery`, `useSuspenseInfiniteQuery` and `infiniteQueryOptions`. Its autofix lands on the order TanStack requires. `no-void-query-fn` needs type information.
+
+`react` also turns `react/jsx-key` back on (error, with `checkFragmentShorthand` and `warnOnDuplicates`): Airbnb's non-strict React config turns it off, and nothing else here catches a list rendered without `key`.
 
 ## i18n and Zod
 
