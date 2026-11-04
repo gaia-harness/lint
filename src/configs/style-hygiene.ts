@@ -103,6 +103,24 @@ const perfectionistConfig: Linter.Config[] = [
           type: 'natural',
         },
       ],
+      // TanStack Query reads option order for type inference:
+      // `@tanstack/query/mutation-property-order` needs `onMutate` before
+      // `onError` and `onSettled`, and `infinite-query-property-order` needs
+      // `queryFn` before the page-param getters. Alphabetical order breaks
+      // both, so the object passed straight to those calls is left unsorted
+      // and the TanStack rules own its order. Every other object keeps
+      // `recommended-natural`'s sort.
+      'perfectionist/sort-objects': [
+        'error',
+        {
+          type: 'unsorted',
+          useConfigurationIf: {
+            callingFunctionNamePattern:
+              '^(infiniteQueryOptions|useInfiniteQuery|useMutation|useSuspenseInfiniteQuery)$',
+          },
+        },
+        {order: 'asc', type: 'natural'},
+      ],
       'perfectionist/sort-jsx-props': [
         'error',
         {

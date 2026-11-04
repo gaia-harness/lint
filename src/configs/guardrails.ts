@@ -9,6 +9,10 @@ import noJsxIifePlugin from '../plugins/no-jsx-iife.js';
 import noNullRenderPlugin from '../plugins/no-null-render.js';
 import noSwitchPlugin from '../plugins/no-switch.js';
 import noZodEnumPlugin from '../plugins/no-zod-enum.js';
+import {
+  REACT_DOCTOR_GUARDRAIL_RULES,
+  REACT_DOCTOR_PLUGINS,
+} from './react-doctor.js';
 
 const buildSonarConfig = (sourceDir: string): Linter.Config[] => [
   sonarjs.configs!.recommended as Linter.Config,
@@ -59,6 +63,22 @@ const buildSonarConfig = (sourceDir: string): Linter.Config[] => [
  */
 const regexpConfig: Linter.Config[] = [
   {...regexp.configs['flat/recommended'], name: 'regexp'},
+];
+
+/**
+ * Curated react-doctor rules (see `react-doctor.ts`) for security and
+ * defensive-JS classes the sonarjs and regexp sets miss: auth tokens in web
+ * storage, secrets in client code, unescaped dynamic `RegExp` input, path
+ * prefix containment, `window.open` without `noopener`, throwing parse calls
+ * and NaN-producing input parses, and similar.
+ */
+const reactDoctorGuardrailsConfig: Linter.Config[] = [
+  {
+    files: ['**/*.ts?(x)', '**/*.js?(x)'],
+    name: 'react-doctor/guardrails',
+    plugins: REACT_DOCTOR_PLUGINS,
+    rules: REACT_DOCTOR_GUARDRAIL_RULES,
+  },
 ];
 
 const cnConditionalConfig: Linter.Config[] = [
@@ -280,6 +300,7 @@ const buildNoRelativeImportPathsConfig = (
 export const buildGuardrails = (sourceDir: string): Linter.Config[] => [
   ...buildSonarConfig(sourceDir),
   ...regexpConfig,
+  ...reactDoctorGuardrailsConfig,
   ...cnConditionalConfig,
   ...noEnumConfig,
   ...noJsxIifeConfig,

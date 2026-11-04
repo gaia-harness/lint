@@ -1,5 +1,10 @@
 import {plugin as shadcnPlugin} from '@shadcn/lint';
 import type {ESLint, Linter} from 'eslint';
+import {
+  MOTION_FONT_RULES,
+  REACT_DOCTOR_PLUGINS,
+  REACT_DOCTOR_SHADCN_RULES,
+} from './react-doctor.js';
 import {RESTRICTED_IMPORT_PATHS} from './restricted-imports.js';
 
 export type GaiaLintShadcnOptions = {
@@ -173,6 +178,18 @@ const VENDORED_UI_RULES_OFF: Linter.RulesRecord = {
   'react-you-might-not-need-an-effect/no-external-store-subscription': 'off',
   'react-you-might-not-need-an-effect/no-initialize-state': 'off',
   'react-you-might-not-need-an-effect/no-pass-data-to-parent': 'off',
+  // The react-doctor shadcn rules check how GAIA code composes the primitives,
+  // not the primitives themselves. toast.tsx: ToastClose's default
+  // `render={<Button size="icon-sm" />}` reads as an unlabeled icon Button,
+  // but the aria-label sits on the ToastPrimitive.Close that renders it.
+  ...Object.fromEntries(
+    Object.keys(REACT_DOCTOR_SHADCN_RULES).map((rule) => [rule, 'off']),
+  ),
+  // Registry animation, scroll and font classes are shadcn's (toast.tsx
+  // animates without a reduced-motion gate).
+  ...Object.fromEntries(
+    Object.keys(MOTION_FONT_RULES).map((rule) => [rule, 'off']),
+  ),
   // sidebar.tsx: SidebarRail's <button> carries no `type`.
   'react/button-has-type': 'off',
   // carousel.tsx, chart.tsx, toggle-group.tsx pass an inline object to a
@@ -281,6 +298,16 @@ export const buildShadcn = (
         'shadcn/no-unknown-classes': 'off',
         'shadcn/require-static-classes': 'error',
       },
+    },
+    // Curated react-doctor rules (see `react-doctor.ts`) for shadcn
+    // composition that breaks a primitive: an icon-only Button with no label,
+    // a DialogContent with no title, a raw control in an InputGroup, a
+    // TabsTrigger outside TabsList.
+    {
+      files: [`${sourceDir}/**/*.${SOURCE_EXTENSIONS}`],
+      name: 'react-doctor/shadcn',
+      plugins: REACT_DOCTOR_PLUGINS,
+      rules: REACT_DOCTOR_SHADCN_RULES,
     },
     {
       files: uiFiles,

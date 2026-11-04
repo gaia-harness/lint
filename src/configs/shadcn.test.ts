@@ -506,3 +506,85 @@ describe('vendored-ui exemption', () => {
     expect(ids).toContain('prefer-arrow-functions/prefer-arrow-functions');
   });
 });
+
+describe('react-doctor shadcn rules', () => {
+  const SHADCN_RD_RULES = [
+    'react-doctor/shadcn-dialog-content-requires-title',
+    'react-doctor/shadcn-icon-button-requires-label',
+    'react-doctor/shadcn-input-group-no-raw-controls',
+    'react-doctor/shadcn-tabs-trigger-requires-list',
+  ];
+  const MOTION_FONT_RD_RULES = [
+    'react-doctor/no-arbitrary-px-font-size',
+    'react-doctor/no-smooth-scroll-without-reduced-motion',
+    'react-doctor/no-ungated-tailwind-animation',
+  ];
+
+  it('are warn on GAIA source files', async () => {
+    const eslint = defaultLinter();
+
+    for (const rule of SHADCN_RD_RULES) {
+      for (const file of [COMPONENT_FILE, PAGE_FILE]) {
+        expect(await severityOf(eslint, file, rule), `${rule} at ${file}`).toBe(1);
+      }
+    }
+  });
+
+  it('are off in vendored ui, which defines the primitives they check', async () => {
+    const eslint = defaultLinter();
+
+    for (const rule of SHADCN_RD_RULES) {
+      expect(await severityOf(eslint, UI_FILE, rule), rule).toBe(0);
+    }
+  });
+
+  it('motion and font rules are warn on GAIA source and off in vendored ui', async () => {
+    const eslint = defaultLinter();
+
+    for (const rule of MOTION_FONT_RD_RULES) {
+      expect(await severityOf(eslint, COMPONENT_FILE, rule), rule).toBe(1);
+      expect(await severityOf(eslint, UI_FILE, rule), rule).toBe(0);
+    }
+  });
+
+  it('the full composition enables exactly the 125 curated react-doctor rules', async () => {
+    const eslint = defaultLinter();
+    const config = (await eslint.calculateConfigForFile(COMPONENT_FILE)) as Linter.Config;
+    const enabled = Object.entries(config.rules ?? {}).filter(([rule, entry]) => {
+      const severity = Array.isArray(entry) ? entry[0] : entry;
+      return rule.startsWith('react-doctor/') && severity !== 0 && severity !== 'off';
+    });
+    expect(enabled).toHaveLength(125);
+  });
+
+  // The full curated list with severities, so a swapped, dropped or
+  // re-severitied rule fails even when the count holds. Update the snapshot
+  // only for a deliberate change to the curated set.
+  it('the curated react-doctor rule set and severities match the snapshot', async () => {
+    const eslint = defaultLinter();
+    const config = (await eslint.calculateConfigForFile(COMPONENT_FILE)) as Linter.Config;
+    const curated = Object.entries(config.rules ?? {})
+      .filter(([rule]) => rule.startsWith('react-doctor/'))
+      .map(([rule, entry]) => `${rule} ${String(Array.isArray(entry) ? entry[0] : entry)}`)
+      .sort();
+    expect(curated).toMatchSnapshot();
+  });
+
+  it('an icon-only Button without a label is reported', async () => {
+    const eslint = defaultLinter();
+    const code = [
+      "import {XIcon} from 'lucide-react';",
+      "import {Button} from '~/components/ui/button';",
+      '',
+      'export const Probe = () => (',
+      '  <Button size="icon">',
+      '    <XIcon />',
+      '  </Button>',
+      ');',
+      '',
+    ].join('\n');
+    expect(await lintFile(eslint, code, COMPONENT_FILE)).toContain(
+      'react-doctor/shadcn-icon-button-requires-label',
+    );
+  });
+});
