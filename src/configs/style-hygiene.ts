@@ -223,6 +223,16 @@ const unicornConfig: Linter.Config[] = [
       'unicorn/prevent-abbreviations': 'off',
     },
   },
+  {
+    // Playwright specs run in Node, where `CSS` is undefined: the rule's
+    // CSS.escape autofix crashes a spec that queries parsed server HTML.
+    // Browser specs select through locators, which the rule never checks.
+    files: ['.playwright/**/*.ts?(x)'],
+    name: 'unicorn/playwright',
+    rules: {
+      'unicorn/require-css-escape': 'off',
+    },
+  },
 ];
 
 const unusedImportsConfig: Linter.Config[] = [

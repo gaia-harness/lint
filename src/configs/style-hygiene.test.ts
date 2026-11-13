@@ -177,6 +177,21 @@ describe('style hygiene naming conventions', () => {
     expect(result.warningCount).toBe(0);
   });
 
+  // Playwright specs run in Node, where `CSS` is undefined, so the rule's
+  // CSS.escape autofix would crash them; browser code keeps it.
+  it.each([
+    ['.playwright/e2e/probe.spec.ts', []],
+    ['app/utils/probe.ts', ['unicorn/require-css-escape']],
+  ])('scopes require-css-escape at %s', async (filePath, expected) => {
+    const ids = await ruleIds(
+      'export const find = (root: ParentNode, name: string) =>\n  root.querySelector(`[name="${name}"]`);\n',
+      filePath,
+    );
+    expect(ids.filter((id) => id === 'unicorn/require-css-escape')).toEqual(
+      expected,
+    );
+  });
+
   it('keeps the disable directive in app/state/index.tsx used', async () => {
     const result = await lintFile(
       `/* eslint-disable canonical/filename-match-exported -- state barrel */\n${component('State')}`,
