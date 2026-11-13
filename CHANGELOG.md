@@ -1,5 +1,11 @@
 # @gaia-react/lint
 
+## 3.1.2
+
+### Patch Changes
+
+- [#90](https://github.com/gaia-harness/lint/pull/90) [`82d3e2b`](https://github.com/gaia-harness/lint/commit/82d3e2b8de4521c14f7bf889e6b4d1406c49c80a) Thanks [@stevensacks](https://github.com/stevensacks)! - Fixed: `unicorn/require-css-escape` is now off for `.playwright/**` files. Playwright specs run in Node, where `CSS` is undefined, so the rule's autofix turned a spec that queries parsed server HTML into one that throws `ReferenceError: CSS is not defined`. Browser code outside `.playwright/` keeps the rule.
+
 ## 3.1.1
 
 ### Patch Changes
