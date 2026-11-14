@@ -1,5 +1,5 @@
 ---
-'@gaia-harness/lint': minor
+'@gaia-harness/lint': patch
 ---
 
 Turn `unicorn/require-css-escape` off for `*.server` modules, and for any
