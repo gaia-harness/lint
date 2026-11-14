@@ -1,5 +1,14 @@
 # @gaia-react/lint
 
+## 3.1.4
+
+### Patch Changes
+
+- [#94](https://github.com/gaia-harness/lint/pull/94) [`0f592ed`](https://github.com/gaia-harness/lint/commit/0f592ed3968a27014b1b30b21058da25f44d52f6) Thanks [@stevensacks](https://github.com/stevensacks)! - Turn `unicorn/require-css-escape` off for files inside a `.server`
+  directory (React Router's server-only module convention), not only
+  `*.server` files. That code runs in Node, where `CSS` is undefined, so the
+  rule's `CSS.escape` autofix crashed it.
+
 ## 3.1.3
 
 ### Patch Changes
