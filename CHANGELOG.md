@@ -1,5 +1,14 @@
 # @gaia-react/lint
 
+## 3.1.3
+
+### Patch Changes
+
+- [#92](https://github.com/gaia-harness/lint/pull/92) [`c869dea`](https://github.com/gaia-harness/lint/commit/c869deac9c4fddf018606b2081dc0ab1f82c24da) Thanks [@stevensacks](https://github.com/stevensacks)! - Turn `unicorn/require-css-escape` off for `*.server` modules, and for any
+  files passed in the new `nodeFiles` option (for example a Vitest node
+  project's tests). That code runs in Node, where `CSS` is undefined, so the
+  rule's `CSS.escape` autofix crashed it.
+
 ## 3.1.2
 
 ### Patch Changes
