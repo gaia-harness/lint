@@ -224,11 +224,16 @@ const unicornConfig: Linter.Config[] = [
     },
   },
   {
-    // Playwright specs and `*.server` modules run in Node, where `CSS` is
-    // undefined: the rule's CSS.escape autofix crashes code that queries
-    // parsed server HTML. Browser specs select through locators, which the
-    // rule never checks.
-    files: ['.playwright/**/*.ts?(x)', '**/*.server.ts?(x)'],
+    // Playwright specs and server-only modules (a `.server` file or any file
+    // in a `.server` directory) run in Node, where `CSS` is undefined: the
+    // rule's CSS.escape autofix crashes code that queries parsed server
+    // HTML. Browser specs select through locators, which the rule never
+    // checks.
+    files: [
+      '.playwright/**/*.ts?(x)',
+      '**/*.server.ts?(x)',
+      '**/*.server/**/*.ts?(x)',
+    ],
     name: 'unicorn/node',
     rules: {
       'unicorn/require-css-escape': 'off',
@@ -237,7 +242,7 @@ const unicornConfig: Linter.Config[] = [
 ];
 
 /**
- * Files that run in Node beyond Playwright specs and `*.server` modules, such
+ * Files that run in Node beyond Playwright specs and `.server` modules, such
  * as a Vitest node project's tests. Same shape as that project's `include`
  * and `exclude`, so one shared glob list feeds both.
  */

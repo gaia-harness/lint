@@ -52,7 +52,7 @@ top of `eslint.config.mjs` and spread the returned configs into
 | Option      | Type     | Default | Description                                                                                                                                            |
 | ----------- | -------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `sourceDir` | `string` | `'app'` | Project source directory (relative to repo root). Used to scope filename conventions, hook-folder rules, and the `no-relative-import-paths` root path. |
-| `nodeFiles` | `{include: string[]; exclude?: string[]}` | none | Globs of files that run in Node besides Playwright specs and `*.server` modules (both already covered), such as a Vitest node project's tests. Turns `unicorn/require-css-escape` off there, since `CSS` is undefined in Node and its autofix would crash them. |
+| `nodeFiles` | `{include: string[]; exclude?: string[]}` | none | Globs of files that run in Node besides Playwright specs and `.server` files and directories (all already covered), such as a Vitest node project's tests. Turns `unicorn/require-css-escape` off there, since `CSS` is undefined in Node and its autofix would crash them. |
 
 Non-GAIA projects that store source under `src/` (or any other path):
 

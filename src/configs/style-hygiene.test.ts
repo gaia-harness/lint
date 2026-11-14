@@ -201,6 +201,7 @@ describe('style hygiene naming conventions', () => {
   it.each([
     ['.playwright/e2e/probe.spec.ts', eslint, []],
     ['app/utils/probe.server.ts', eslint, []],
+    ['app/sessions.server/probe.ts', eslint, []],
     ['app/utils/probe.ts', eslint, ['unicorn/require-css-escape']],
     ['app/utils/tests/probe.test.ts', eslint, ['unicorn/require-css-escape']],
     ['app/utils/tests/probe.test.ts', nodeFilesEslint, []],
