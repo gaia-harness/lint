@@ -29,8 +29,8 @@ export type {
 
 export type GaiaLintOptions = {
   /**
-   * Globs of files that run in Node beyond Playwright specs and `*.server`
-   * modules (both already covered), such as a Vitest node project's tests.
+   * Globs of files that run in Node beyond Playwright specs and `.server`
+   * files and directories (all already covered), such as a Vitest node project's tests.
    * `unicorn/require-css-escape` is off for them: `CSS` is undefined in
    * Node, so the rule's autofix would crash them.
    */
