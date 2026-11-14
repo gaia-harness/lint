@@ -22,9 +22,7 @@ const FILENAME_RULE = 'check-file/filename-naming-convention';
 const FOLDER_RULE = 'check-file/folder-naming-convention';
 const MATCH_EXPORTED_RULE = 'canonical/filename-match-exported';
 
-const lint = gaiaLint();
-
-const composed: Linter.Config[] = [
+const compose = (lint: ReturnType<typeof gaiaLint>): Linter.Config[] => [
   ...lint.base,
   ...lint.react,
   ...lint.reactRouter,
@@ -41,13 +39,29 @@ const composed: Linter.Config[] = [
   {languageOptions: {parserOptions: {project: null, projectService: false}}},
 ];
 
-const eslint = new ESLint({overrideConfig: composed, overrideConfigFile: true});
+const eslint = new ESLint({
+  overrideConfig: compose(gaiaLint()),
+  overrideConfigFile: true,
+});
+
+const nodeFilesEslint = new ESLint({
+  overrideConfig: compose(
+    gaiaLint({
+      nodeFiles: {
+        exclude: ['app/**/hooks/**'],
+        include: ['app/**/*.test.ts', 'test/**/*.test.ts'],
+      },
+    }),
+  ),
+  overrideConfigFile: true,
+});
 
 const lintFile = async (
   code: string,
   filePath: string,
+  linter: ESLint = eslint,
 ): Promise<ESLint.LintResult> => {
-  const results = await eslint.lintText(code, {filePath});
+  const results = await linter.lintText(code, {filePath});
   expect(results, `one result for ${filePath}`).toHaveLength(1);
   const [result] = results;
   const fatal = result.messages.filter((message) => message.fatal === true);
@@ -68,8 +82,12 @@ const namingMessages = async (code: string, filePath: string) => {
   return result.messages.filter((message) => isNamingRule(message.ruleId));
 };
 
-const ruleIds = async (code: string, filePath: string): Promise<string[]> => {
-  const result = await lintFile(code, filePath);
+const ruleIds = async (
+  code: string,
+  filePath: string,
+  linter?: ESLint,
+): Promise<string[]> => {
+  const result = await lintFile(code, filePath, linter);
   return result.messages.map((message) => message.ruleId ?? '');
 };
 
@@ -177,15 +195,27 @@ describe('style hygiene naming conventions', () => {
     expect(result.warningCount).toBe(0);
   });
 
-  // Playwright specs run in Node, where `CSS` is undefined, so the rule's
-  // CSS.escape autofix would crash them; browser code keeps it.
+  // Code that runs in Node, where `CSS` is undefined, would crash on the
+  // rule's CSS.escape autofix; browser code keeps it. `nodeFilesEslint`
+  // lints through a bundle built with the `nodeFiles` option.
   it.each([
-    ['.playwright/e2e/probe.spec.ts', []],
-    ['app/utils/probe.ts', ['unicorn/require-css-escape']],
-  ])('scopes require-css-escape at %s', async (filePath, expected) => {
+    ['.playwright/e2e/probe.spec.ts', eslint, []],
+    ['app/utils/probe.server.ts', eslint, []],
+    ['app/utils/probe.ts', eslint, ['unicorn/require-css-escape']],
+    ['app/utils/tests/probe.test.ts', eslint, ['unicorn/require-css-escape']],
+    ['app/utils/tests/probe.test.ts', nodeFilesEslint, []],
+    ['test/probe.test.ts', nodeFilesEslint, []],
+    [
+      'app/hooks/tests/use-probe.test.ts',
+      nodeFilesEslint,
+      ['unicorn/require-css-escape'],
+    ],
+    ['app/utils/probe.ts', nodeFilesEslint, ['unicorn/require-css-escape']],
+  ])('scopes require-css-escape at %s', async (filePath, linter, expected) => {
     const ids = await ruleIds(
       'export const find = (root: ParentNode, name: string) =>\n  root.querySelector(`[name="${name}"]`);\n',
       filePath,
+      linter,
     );
     expect(ids.filter((id) => id === 'unicorn/require-css-escape')).toEqual(
       expected,
