@@ -224,16 +224,43 @@ const unicornConfig: Linter.Config[] = [
     },
   },
   {
-    // Playwright specs run in Node, where `CSS` is undefined: the rule's
-    // CSS.escape autofix crashes a spec that queries parsed server HTML.
-    // Browser specs select through locators, which the rule never checks.
-    files: ['.playwright/**/*.ts?(x)'],
-    name: 'unicorn/playwright',
+    // Playwright specs and `*.server` modules run in Node, where `CSS` is
+    // undefined: the rule's CSS.escape autofix crashes code that queries
+    // parsed server HTML. Browser specs select through locators, which the
+    // rule never checks.
+    files: ['.playwright/**/*.ts?(x)', '**/*.server.ts?(x)'],
+    name: 'unicorn/node',
     rules: {
       'unicorn/require-css-escape': 'off',
     },
   },
 ];
+
+/**
+ * Files that run in Node beyond Playwright specs and `*.server` modules, such
+ * as a Vitest node project's tests. Same shape as that project's `include`
+ * and `exclude`, so one shared glob list feeds both.
+ */
+export type GaiaLintNodeFiles = {
+  exclude?: string[];
+  include: string[];
+};
+
+const buildNodeFilesConfig = (
+  nodeFiles: GaiaLintNodeFiles | undefined,
+): Linter.Config[] =>
+  nodeFiles === undefined || nodeFiles.include.length === 0
+    ? []
+    : [
+        {
+          files: nodeFiles.include,
+          ignores: nodeFiles.exclude ?? [],
+          name: 'unicorn/node-files',
+          rules: {
+            'unicorn/require-css-escape': 'off',
+          },
+        },
+      ];
 
 const unusedImportsConfig: Linter.Config[] = [
   {
@@ -353,10 +380,14 @@ const buildCheckFileConfig = (sourceDir: string): Linter.Config[] => [
   },
 ];
 
-export const buildStyleHygiene = (sourceDir: string): Linter.Config[] => [
+export const buildStyleHygiene = (
+  sourceDir: string,
+  nodeFiles?: GaiaLintNodeFiles,
+): Linter.Config[] => [
   ...buildCanonicalConfig(sourceDir),
   ...perfectionistConfig,
   ...unicornConfig,
+  ...buildNodeFilesConfig(nodeFiles),
   ...unusedImportsConfig,
   ...buildCheckFileConfig(sourceDir),
 ];

@@ -13,17 +13,28 @@ import {react} from './configs/react.js';
 import {buildReactRouter} from './configs/react-router.js';
 import {buildShadcn, type GaiaLintShadcnOptions} from './configs/shadcn.js';
 import {storybook} from './configs/storybook.js';
-import {buildStyleHygiene} from './configs/style-hygiene.js';
+import {
+  buildStyleHygiene,
+  type GaiaLintNodeFiles,
+} from './configs/style-hygiene.js';
 import {testing} from './configs/testing.js';
 import {zod} from './configs/zod.js';
 
 export type {
   GaiaLintBetterTailwindOptions,
   GaiaLintIgnoresOptions,
+  GaiaLintNodeFiles,
   GaiaLintShadcnOptions,
 };
 
 export type GaiaLintOptions = {
+  /**
+   * Globs of files that run in Node beyond Playwright specs and `*.server`
+   * modules (both already covered), such as a Vitest node project's tests.
+   * `unicorn/require-css-escape` is off for them: `CSS` is undefined in
+   * Node, so the rule's autofix would crash them.
+   */
+  nodeFiles?: GaiaLintNodeFiles;
   /**
    * Application source directory (relative to project root). Used to scope
    * file-path-based rules — filename conventions, hook-folder scoping,
@@ -106,7 +117,7 @@ const gaiaLint = (opts?: GaiaLintOptions): GaiaLintBundle => {
     reactRouter: buildReactRouter(sourceDir),
     shadcn: (shadcnOpts) => buildShadcn(sourceDir, shadcnOpts),
     storybook,
-    styleHygiene: buildStyleHygiene(sourceDir),
+    styleHygiene: buildStyleHygiene(sourceDir, opts?.nodeFiles),
     testing,
     zod,
   };
