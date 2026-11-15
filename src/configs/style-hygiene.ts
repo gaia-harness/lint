@@ -240,7 +240,7 @@ const unicornConfig: Linter.Config[] = [
     },
   },
   {
-    // A function a spec passes to `page.evaluate` and its siblings runs in
+    // A function a spec passes to `evaluate` and its sibling methods runs in
     // the browser, where `CSS.escape` exists, so the rule applies there.
     files: ['.playwright/**/*.ts?(x)'],
     name: 'unicorn/playwright-browser-callbacks',

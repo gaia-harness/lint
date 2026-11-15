@@ -224,7 +224,7 @@ describe('style hygiene naming conventions', () => {
   });
 
   // A Playwright spec runs in Node, but the function it passes to
-  // `page.evaluate` and its siblings runs in the browser, where the rule
+  // `evaluate` and its sibling methods runs in the browser, where the rule
   // applies.
   it.each([
     [
@@ -247,7 +247,7 @@ describe('style hygiene naming conventions', () => {
       'names.map((name) => parsed.querySelector(`[name="${name}"]`));',
       [],
     ],
-  ])('checks CSS.escape in %s in a Playwright spec', async (_, statement, expected) => {
+  ])('reports require-css-escape in a Playwright spec only inside a browser callback: %s', async (_, statement, expected) => {
     const ids = await ruleIds(
       `declare const page: any, parsed: any, name: string, names: string[];\n${statement}\nexport {};\n`,
       '.playwright/e2e/probe.spec.ts',
