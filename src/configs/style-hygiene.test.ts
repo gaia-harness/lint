@@ -223,6 +223,40 @@ describe('style hygiene naming conventions', () => {
     );
   });
 
+  // A Playwright spec runs in Node, but the function it passes to
+  // `page.evaluate` and its siblings runs in the browser, where the rule
+  // applies.
+  it.each([
+    [
+      'an evaluate callback',
+      'await page.evaluate((name) => document.querySelector(`[name="${name}"]`), name);',
+      ['browser-callback-css-escape/require-css-escape'],
+    ],
+    [
+      'a $eval callback',
+      "await page.$eval('main', (main, name) => main.querySelector(`[name=\"${name}\"]`), name);",
+      ['browser-callback-css-escape/require-css-escape'],
+    ],
+    [
+      'spec code outside a callback',
+      'parsed.querySelector(`[name="${name}"]`);',
+      [],
+    ],
+    [
+      'a callback to another method',
+      'names.map((name) => parsed.querySelector(`[name="${name}"]`));',
+      [],
+    ],
+  ])('checks CSS.escape in %s in a Playwright spec', async (_, statement, expected) => {
+    const ids = await ruleIds(
+      `declare const page: any, parsed: any, name: string, names: string[];\n${statement}\nexport {};\n`,
+      '.playwright/e2e/probe.spec.ts',
+    );
+    expect(ids.filter((id) => id.endsWith('require-css-escape'))).toEqual(
+      expected,
+    );
+  });
+
   it('keeps the disable directive in app/state/index.tsx used', async () => {
     const result = await lintFile(
       `/* eslint-disable canonical/filename-match-exported -- state barrel */\n${component('State')}`,
