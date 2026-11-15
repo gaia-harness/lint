@@ -4,6 +4,7 @@ import checkFile from 'eslint-plugin-check-file';
 import perfectionist from 'eslint-plugin-perfectionist';
 import unicorn from 'eslint-plugin-unicorn';
 import unusedImports from 'eslint-plugin-unused-imports';
+import browserCallbackCssEscapePlugin from '../plugins/browser-callback-css-escape.js';
 
 const buildCanonicalConfig = (sourceDir: string): Linter.Config[] => [
   canonical.configs['flat/recommended'] as Linter.Config,
@@ -227,8 +228,7 @@ const unicornConfig: Linter.Config[] = [
     // Playwright specs and server-only modules (a `.server` file or any file
     // in a `.server` directory) run in Node, where `CSS` is undefined: the
     // rule's CSS.escape autofix crashes code that queries parsed server
-    // HTML. Browser specs select through locators, which the rule never
-    // checks.
+    // HTML.
     files: [
       '.playwright/**/*.ts?(x)',
       '**/*.server.ts?(x)',
@@ -237,6 +237,16 @@ const unicornConfig: Linter.Config[] = [
     name: 'unicorn/node',
     rules: {
       'unicorn/require-css-escape': 'off',
+    },
+  },
+  {
+    // A function a spec passes to `evaluate` and its sibling methods runs in
+    // the browser, where `CSS.escape` exists, so the rule applies there.
+    files: ['.playwright/**/*.ts?(x)'],
+    name: 'unicorn/playwright-browser-callbacks',
+    plugins: {'browser-callback-css-escape': browserCallbackCssEscapePlugin},
+    rules: {
+      'browser-callback-css-escape/require-css-escape': 'error',
     },
   },
 ];
