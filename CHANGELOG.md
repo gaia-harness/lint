@@ -1,5 +1,16 @@
 # @gaia-react/lint
 
+## 3.1.5
+
+### Patch Changes
+
+- [#96](https://github.com/gaia-harness/lint/pull/96) [`df73e9a`](https://github.com/gaia-harness/lint/commit/df73e9af3c88296e9d4646ddf9a8a28fec938fe2) Thanks [@stevensacks](https://github.com/stevensacks)! - Check `unicorn/require-css-escape` inside the functions a Playwright spec
+  passes to `evaluate` and its sibling methods (`evaluateHandle`, `$eval`,
+  `$$eval`, `evaluateAll`, `waitForFunction`, `addInitScript`), on a page,
+  frame, locator or context. Those run in the browser, where `CSS.escape`
+  exists, so an unescaped interpolated selector there is flagged again; the
+  rest of a spec stays exempt because it runs in Node.
+
 ## 3.1.4
 
 ### Patch Changes
