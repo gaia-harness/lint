@@ -164,8 +164,18 @@ const unicornConfig: Linter.Config[] = [
   {
     name: 'unicorn',
     rules: {
+      // A TODO or FIXME is unfinished work: track it in an issue, not the
+      // code. `location: 'start'` matches only a comment that opens with the
+      // term, so prose that mentions the word mid-sentence passes.
+      'no-warning-comments': [
+        'error',
+        {location: 'start', terms: ['todo', 'fixme']},
+      ],
       'unicorn/consistent-destructuring': 'error',
       'unicorn/consistent-template-literal-escape': 'off',
+      // Off: it accepts a TODO that carries an expiry condition, which
+      // no-warning-comments above bans outright.
+      'unicorn/expiring-todo-comments': 'off',
       'unicorn/filename-case': 'off',
       'unicorn/new-for-builtins': 'off',
       'unicorn/no-array-callback-reference': 'off',
