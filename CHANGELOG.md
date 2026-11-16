@@ -1,5 +1,13 @@
 # @gaia-react/lint
 
+## 3.2.0
+
+### Minor Changes
+
+- [#98](https://github.com/gaia-harness/lint/pull/98) [`e6c6526`](https://github.com/gaia-harness/lint/commit/e6c6526f67297b83a95f69978688aa0560026bce) Thanks [@stevensacks](https://github.com/stevensacks)! - Ban commented-out code and TODO/FIXME comments. `guardrails` turns `sonarjs/no-commented-code` on, and `styleHygiene` turns `no-warning-comments` on for a comment that opens with TODO or FIXME (prose that mentions the word mid-sentence passes) and `unicorn/expiring-todo-comments` off. Track unfinished work in an issue instead.
+
+  Moves to stylelint 18: the `stylelint` peer is now `^18.0.0`, with `stylelint-config-standard` 41, so `engines.node` follows stylelint 18 to `^22.22.2 || ^24.15.0 || >=26.0.0`. Upgrade stylelint, and Node if older, alongside this release. Also bumps the bundled ESLint plugins to their latest patch and minor versions.
+
 ## 3.1.5
 
 ### Patch Changes
