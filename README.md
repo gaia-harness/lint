@@ -70,8 +70,8 @@ new source root: no per-config override blocks needed.
 | `base`           | `Linter.Config[]`                | JS recommended, TypeScript (typescript-eslint), `import-x`, unused-disable-directive reporting at error, `eslint-comments` (every disable states a reason), `prefer-arrow-functions`, lodash/underscore guard, `no-restricted-imports` (bans bare `@conform-to/zod`) | required  |
 | `react`          | `Linter.Config[]`                | `eslint-plugin-react`, `react-hooks`, `jsx-a11y`, `react-refresh` (Fast Refresh-safe exports), `react-you-might-not-need-an-effect` (Effect misuse), nine `@eslint-react` rules (Effect cleanup, React 19 forms), 77 curated `react-doctor` rules (SSR and hydration, HTML validity, accessibility, render and Effect correctness, performance, motion, component size and complexity), GAIA-specific React rules. See [react-doctor rules](#react-doctor-rules) | required for React apps |
 | `reactRouter`    | `Linter.Config[]`                | Relaxations for React Router framework mode, route-module exports allowed by `react-refresh`, plus a TanStack Query block (`no-imperative-query-fetch` (custom), `@tanstack/eslint-plugin-query` recommended, five `react-doctor` Query rules) and 25 curated `react-doctor` router rules with the capability settings they need. Spread **after** `react`. See [Router-specific rules](#router-specific-rules) | React Router only |
-| `styleHygiene`   | `Linter.Config[]`                | `canonical`, `perfectionist`, `unicorn`, `unused-imports`, `check-file`                                                                           | required  |
-| `guardrails`     | `Linter.Config[]`                | `regexp` (recommended, ReDoS included), `no-enum` (custom), `no-switch` (custom), `no-jsx-iife` (custom), `no-null-render` (custom), `no-zod-enum` (custom), `cn-conditional` (custom), `no-relative-import-paths`, `sonarjs`, `import-x`, `prefer-arrow-functions`, 14 curated `react-doctor` security and defensive-JS rules | required  |
+| `styleHygiene`   | `Linter.Config[]`                | `canonical`, `perfectionist`, `unicorn`, `unused-imports`, `check-file`, `no-warning-comments` (bans a comment that opens with TODO or FIXME)      | required  |
+| `guardrails`     | `Linter.Config[]`                | `regexp` (recommended, ReDoS included), `no-enum` (custom), `no-switch` (custom), `no-jsx-iife` (custom), `no-null-render` (custom), `no-zod-enum` (custom), `cn-conditional` (custom), `no-relative-import-paths`, `sonarjs` (`no-commented-code` included), `import-x`, `prefer-arrow-functions`, 14 curated `react-doctor` security and defensive-JS rules | required  |
 | `i18n`           | `Linter.Config[]`                | `i18next/no-literal-string` on raw JSX text under the source dir. See [i18n and Zod](#i18n-and-zod)                                              | optional  |
 | `zod`            | `Linter.Config[]`                | `eslint-plugin-zod` recommended, minus `consistent-import`. See [i18n and Zod](#i18n-and-zod)                                                    | optional  |
 | `testing`        | `Linter.Config[]`                | Vitest + jest-dom config scoped to `*.test.*`, `*.stories.*` and `test/`                                                                          | optional  |
@@ -140,7 +140,7 @@ export default defineConfig([
 
 ## Peer dependencies
 
-`eslint`, `prettier`, and `typescript` are declared as **peer
+`eslint`, `prettier`, `stylelint`, and `typescript` are declared as **peer
 dependencies** so consumers control their own versions and a single resolved
 copy of each is installed in `node_modules`. Every other plugin
 (`eslint-plugin-react`, `typescript-eslint`, `eslint-plugin-import-x`, etc.)
@@ -151,6 +151,7 @@ Supported versions:
 
 - `eslint ^9.30.0` (`@shadcn/lint` needs 9.30 or later)
 - `prettier ^3.0.0`
+- `stylelint ^18.0.0`
 - `typescript ^5.0.0 || ^6.0.0`
 
 ## Custom rules included

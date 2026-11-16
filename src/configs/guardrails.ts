@@ -20,8 +20,11 @@ const buildSonarConfig = (sourceDir: string): Linter.Config[] => [
     name: 'sonarjs',
     rules: {
       'sonarjs/cognitive-complexity': 'error',
+      // Off with sonarjs/todo-tag: both match the word anywhere in a comment,
+      // so they flag prose. no-warning-comments in style-hygiene bans a
+      // comment that opens with TODO or FIXME instead.
       'sonarjs/fixme-tag': 'off',
-      'sonarjs/no-commented-code': 'off',
+      'sonarjs/no-commented-code': 'error',
       'sonarjs/no-nested-conditional': 'off',
       'sonarjs/no-nested-functions': 'off',
       'sonarjs/no-selector-parameter': 'off',
