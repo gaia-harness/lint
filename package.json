@@ -1,6 +1,6 @@
 {
   "name": "@gaia-harness/lint",
-  "version": "3.2.0",
+  "version": "3.2.1",
   "description": "GAIA's opinionated lint configuration.",
   "type": "module",
   "main": "./dist/index.js",
