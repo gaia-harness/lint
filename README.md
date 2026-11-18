@@ -63,6 +63,33 @@ const lint = gaiaLint({sourceDir: 'src'});
 That single call rebinds `base`, `reactRouter`, `styleHygiene`, and `guardrails` to the
 new source root: no per-config override blocks needed.
 
+### Prettier config
+
+`@gaia-harness/lint/prettier` exports the shared Prettier config. The default
+export includes `prettier-plugin-tailwindcss` and its `tailwind*` options:
+
+```js
+// prettier.config.mjs
+export {default} from '@gaia-harness/lint/prettier';
+```
+
+The plugin is resolved from this package, so the consumer needs no
+`prettier-plugin-tailwindcss` dependency of its own, including under pnpm's
+strict `node_modules`.
+
+A project with no UI calls the `prettierConfig(opts?)` factory instead:
+
+```js
+// prettier.config.mjs
+import {prettierConfig} from '@gaia-harness/lint/prettier';
+
+export default prettierConfig({tailwind: false});
+```
+
+| Option     | Type      | Default | Description                                                                                                         |
+| ---------- | --------- | ------- | ------------------------------------------------------------------------------------------------------------------- |
+| `tailwind` | `boolean` | `true`  | Include `prettier-plugin-tailwindcss` and the `tailwind*` options this config sets. |
+
 ## Bundle shape
 
 | Property         | Shape                            | Includes                                                                                                                                          | Required? |
