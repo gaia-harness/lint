@@ -88,7 +88,7 @@ export default prettierConfig({tailwind: false});
 
 | Option     | Type      | Default | Description                                                                                                         |
 | ---------- | --------- | ------- | ------------------------------------------------------------------------------------------------------------------- |
-| `tailwind` | `boolean` | `true`  | Include `prettier-plugin-tailwindcss` and every `tailwind*` option. `false` leaves out the plugin and its options together. |
+| `tailwind` | `boolean` | `true`  | Include `prettier-plugin-tailwindcss` and the `tailwind*` options this config sets. |
 
 ## Bundle shape
 
