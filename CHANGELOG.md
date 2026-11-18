@@ -1,5 +1,11 @@
 # @gaia-react/lint
 
+## 3.2.1
+
+### Patch Changes
+
+- [#100](https://github.com/gaia-harness/lint/pull/100) [`680810c`](https://github.com/gaia-harness/lint/commit/680810cf4c95e1d67115cf63b0053f77514cc971) Thanks [@stevensacks](https://github.com/stevensacks)! - Fix the `@gaia-harness/lint/prettier` config failing in pnpm projects with `Cannot find package 'prettier-plugin-tailwindcss'`: the Tailwind plugin now resolves from this package, so consumers need no dependency of their own on it. Add a `prettierConfig({tailwind})` factory so a project with no UI can drop the plugin and its options with `tailwind: false`; the default export formats as before.
+
 ## 3.2.0
 
 ### Minor Changes
