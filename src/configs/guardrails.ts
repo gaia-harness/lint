@@ -20,6 +20,10 @@ const buildSonarConfig = (sourceDir: string): Linter.Config[] => [
     name: 'sonarjs',
     rules: {
       'sonarjs/cognitive-complexity': 'error',
+      // Off: `@typescript-eslint/no-deprecated` in `base` reports every use
+      // of a `@deprecated` symbol this one does, plus re-exports it misses.
+      // It only adds a second report on the import line.
+      'sonarjs/deprecation': 'off',
       // Off with sonarjs/todo-tag: both match the word anywhere in a comment,
       // so they flag prose. no-warning-comments in style-hygiene bans a
       // comment that opens with TODO or FIXME instead.

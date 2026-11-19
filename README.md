@@ -327,6 +327,8 @@ projects nothing.
 | `guardrails` (14) | auth tokens in web storage, secrets in client code, dynamic `RegExp` input, path containment, `window.open` without `noopener`, throwing and NaN-producing parses, and similar |
 | `shadcn()` (4) | icon Button label, DialogContent title, InputGroup controls, TabsTrigger inside TabsList |
 
+In `react`, the 40 rules that read only JSX (HTML validity, accessibility, images and scripts, motion and font, and two input and pointer rules) run on `.jsx` and `.tsx` files; a test checks that each still listens to JSX nodes only. The rest run on every script file, because a `.ts` hook can trip them. The same split applies to `react`'s other plugins: `eslint-plugin-react`, `jsx-a11y`, the `@stylistic` JSX rules and `@eslint-react/no-context-provider` run on `.jsx` and `.tsx`; `react-hooks`, `react-you-might-not-need-an-effect` and the other `@eslint-react` rules run everywhere. The plugins stay registered on every file.
+
 The vendored shadcn ui files skip the four shadcn rules (they check how GAIA code composes the primitives) and the three motion and font rules (registry classes).
 
 `no-giant-component` reports a component over 300 lines. `no-high-complexity-react-function` reports a component or `use*` hook over 15 cyclomatic or cognitive complexity. Both thresholds are fixed upstream. They stand in for the sonarjs size and complexity rules, which stay off because they do not model components and hooks.

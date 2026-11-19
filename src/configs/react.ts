@@ -5,6 +5,7 @@ import youMightNotNeedAnEffect from 'eslint-plugin-react-you-might-not-need-an-e
 import type {ESLint, Linter} from 'eslint';
 import {
   REACT_DOCTOR_PLUGINS,
+  REACT_DOCTOR_REACT_JSX_RULES,
   REACT_DOCTOR_REACT_RULES,
 } from './react-doctor.js';
 
@@ -29,6 +30,42 @@ export const ONLY_EXPORT_COMPONENTS_OPTIONS = {
   allowConstantExport: true,
 } as const;
 
+const JSX_FILES = ['**/*.jsx', '**/*.tsx'];
+
+// Rules about elements, props, components and JSX formatting. `react-hooks`
+// is not among them: a hook can live in a `.ts` file.
+const isJsxRule = (ruleId: string): boolean =>
+  /^(?:react|jsx-a11y)\/|^@stylistic\/jsx-/.test(ruleId);
+
+/**
+ * Moves an Airbnb block's JSX rules into a sibling block scoped to `.jsx` and
+ * `.tsx`, so they stop running on plain `.ts` and `.js` modules where they
+ * cannot report. The block keeps its own `files`, `languageOptions`,
+ * `settings` and every other rule (`react-hooks`, and core rules such as
+ * `no-underscore-dangle`), and the plugins stay registered on every script
+ * file, since `base` and `styleHygiene` name rules from them there.
+ */
+const scopeJsxRules = (config: Linter.Config): Linter.Config[] => {
+  const entries = Object.entries(config.rules ?? {});
+  const jsxEntries = entries.filter(([ruleId]) => isJsxRule(ruleId));
+  if (jsxEntries.length === 0) {
+    return [config];
+  }
+  return [
+    {
+      ...config,
+      rules: Object.fromEntries(
+        entries.filter(([ruleId]) => !isJsxRule(ruleId)),
+      ),
+    },
+    {
+      files: JSX_FILES,
+      name: `${config.name ?? 'airbnb'}/jsx`,
+      rules: Object.fromEntries(jsxEntries),
+    },
+  ];
+};
+
 export const react: Linter.Config[] = [
   // React plugin
   plugins.react,
@@ -36,9 +73,18 @@ export const react: Linter.Config[] = [
   plugins.reactHooks,
   // React JSX A11y plugin
   plugins.reactA11y,
-  // Airbnb React recommended config
-  ...configs.react.recommended,
+  // Airbnb React recommended config, its JSX rules scoped to JSX files
+  ...configs.react.recommended.flatMap(scopeJsxRules),
+  // Off on every script file, as before: `base` turns it on for TypeScript
+  // files through Airbnb's React TypeScript config.
   {
+    name: 'react-custom/jsx-filename-extension',
+    rules: {
+      'react/jsx-filename-extension': 'off',
+    },
+  },
+  {
+    files: JSX_FILES,
     name: 'react-custom',
     rules: {
       'jsx-a11y/control-has-associated-label': 'off',
@@ -53,7 +99,6 @@ export const react: Linter.Config[] = [
       'react/function-component-definition': 'off',
       'react/jsx-boolean-value': ['error', 'always'],
       'react/jsx-curly-brace-presence': 'error',
-      'react/jsx-filename-extension': 'off',
       'react/jsx-fragments': 'error',
       // airbnb-extended's non-strict react config turns this off, and nothing
       // else in the bundle catches a list rendered without `key`.
@@ -122,13 +167,13 @@ export const react: Linter.Config[] = [
   // through an AbortController). React 19 forms only: `ref` as a prop instead
   // of `forwardRef`, `use(Context)` instead of `useContext`, and `<Context>`
   // instead of `<Context.Provider>`. `no-context-provider` matches by name, so
-  // it reports `ThemeContext.Provider` but not `Ctx.Provider`.
+  // it reports `ThemeContext.Provider` but not `Ctx.Provider`. It reads only
+  // JSX, so it runs on JSX files; the rest read calls, which a `.ts` hook holds.
   {
     files: ['**/*.ts?(x)', '**/*.js?(x)'],
     name: 'eslint-react',
     plugins: {'@eslint-react': eslintReact as unknown as ESLint.Plugin},
     rules: {
-      '@eslint-react/no-context-provider': 'error',
       '@eslint-react/no-forward-ref': 'error',
       '@eslint-react/no-use-context': 'error',
       '@eslint-react/web-api-no-leaked-event-listener': 'error',
@@ -137,6 +182,13 @@ export const react: Linter.Config[] = [
       '@eslint-react/web-api-no-leaked-interval': 'error',
       '@eslint-react/web-api-no-leaked-resize-observer': 'error',
       '@eslint-react/web-api-no-leaked-timeout': 'error',
+    },
+  },
+  {
+    files: JSX_FILES,
+    name: 'eslint-react/jsx',
+    rules: {
+      '@eslint-react/no-context-provider': 'error',
     },
   },
   // Curated react-doctor rules (see `react-doctor.ts`, which groups them with
@@ -149,6 +201,11 @@ export const react: Linter.Config[] = [
     name: 'react-doctor/react',
     plugins: REACT_DOCTOR_PLUGINS,
     rules: REACT_DOCTOR_REACT_RULES,
+  },
+  {
+    files: JSX_FILES,
+    name: 'react-doctor/react-jsx',
+    rules: REACT_DOCTOR_REACT_JSX_RULES,
   },
   {
     files: ['**/*.test.ts?(x)', '**/*.stories.ts?(x)'],
