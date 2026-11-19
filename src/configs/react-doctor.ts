@@ -152,7 +152,26 @@ const SIZE_RULES: Linter.RulesRecord = {
   'react-doctor/no-high-complexity-react-function': 'warn',
 };
 
-export const REACT_DOCTOR_REACT_RULES: Linter.RulesRecord = {
+/**
+ * `react`, JSX files only: every rule here listens to JSX nodes and nothing
+ * else, so it cannot report on a file without JSX. A test in
+ * `react-doctor.test.ts` checks each one's listeners, so a plugin bump that
+ * teaches one to read plain code fails until it moves back to the broad set.
+ */
+const JSX_ONLY_RULE_IDS = new Set([
+  ...Object.keys(HTML_RULES),
+  ...Object.keys(A11Y_RULES),
+  ...Object.keys(MOTION_FONT_RULES),
+  'react-doctor/no-controlled-input-value-without-state-update',
+  'react-doctor/no-img-lazy-with-high-fetchpriority',
+  'react-doctor/no-img-without-dimensions',
+  'react-doctor/no-mixed-srcset-descriptors',
+  'react-doctor/no-srcset-without-sizes',
+  'react-doctor/pointer-capture-needs-cancel-handler',
+  'react-doctor/rendering-script-defer-async',
+]);
+
+const ALL_REACT_RULES: Linter.RulesRecord = {
   ...SSR_RULES,
   ...HTML_RULES,
   ...A11Y_RULES,
@@ -162,6 +181,24 @@ export const REACT_DOCTOR_REACT_RULES: Linter.RulesRecord = {
   ...MOTION_FONT_RULES,
   ...SIZE_RULES,
 };
+
+const pickRules = (keep: (ruleId: string) => boolean): Linter.RulesRecord =>
+  Object.fromEntries(
+    Object.entries(ALL_REACT_RULES).filter(([ruleId]) => keep(ruleId)),
+  );
+
+/** `react`, JSX files only (see `JSX_ONLY_RULE_IDS`). */
+export const REACT_DOCTOR_REACT_JSX_RULES = pickRules((ruleId) =>
+  JSX_ONLY_RULE_IDS.has(ruleId),
+);
+
+/**
+ * `react`, every script file: rules that read hooks, Effects, render bodies
+ * and calls, which a `.ts` hook or helper module can hold without JSX.
+ */
+export const REACT_DOCTOR_REACT_RULES = pickRules(
+  (ruleId) => !JSX_ONLY_RULE_IDS.has(ruleId),
+);
 
 /**
  * `reactRouter`: framework-mode mistakes in loaders, actions, middleware,

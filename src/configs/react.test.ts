@@ -148,3 +148,83 @@ test('an Effect that cleans up its listener and timeout reports none of them', a
   expect(await ruleIdsFor(code, YME)).toEqual([]);
   expect(await ruleIdsFor(code, ER)).toEqual([]);
 });
+
+/**
+ * JSX rules run on `.jsx` and `.tsx` only; hook rules, and the Effect and
+ * leak rules a `.ts` hook can trip, still run on every script file.
+ */
+describe('file scoping', () => {
+  const resolver = new ESLint({
+    overrideConfig: [...lint.base, ...lint.react, ...lint.guardrails],
+    overrideConfigFile: true,
+  });
+
+  const severityOf = async (file: string, rule: string): Promise<number> => {
+    const resolved = await resolver.calculateConfigForFile(file);
+    const entry = resolved.rules[rule] as [number, ...unknown[]] | number | undefined;
+    if (entry === undefined) return 0;
+    return Array.isArray(entry) ? entry[0] : entry;
+  };
+
+  const JSX_RULES = [
+    'react/jsx-key',
+    'react/no-unstable-nested-components',
+    'react/boolean-prop-naming',
+    'jsx-a11y/alt-text',
+    `${ER}no-context-provider`,
+  ];
+
+  const BROAD_RULES = [
+    'react-hooks/rules-of-hooks',
+    'react-hooks/exhaustive-deps',
+    `${YME}no-derived-state`,
+    `${ER}no-forward-ref`,
+    `${ER}web-api-no-leaked-timeout`,
+    'react-doctor/no-set-state-after-await-in-effect',
+  ];
+
+  test('JSX rules are on for .tsx and .jsx, off for .ts and .js', async () => {
+    for (const rule of JSX_RULES) {
+      for (const file of [FILE, 'app/components/probe/index.jsx']) {
+        expect(await severityOf(file, rule), `${rule} at ${file}`).toBe(2);
+      }
+      for (const file of ['app/hooks/use-probe.ts', 'app/utils/probe.ts', 'probe.js']) {
+        expect(await severityOf(file, rule), `${rule} at ${file}`).toBe(0);
+      }
+    }
+  });
+
+  test('hook and Effect rules stay on for .ts hooks and modules', async () => {
+    for (const rule of BROAD_RULES) {
+      for (const file of [FILE, 'app/hooks/use-probe.ts', 'app/utils/probe.ts']) {
+        expect(await severityOf(file, rule), `${rule} at ${file}`).toBeGreaterThan(0);
+      }
+    }
+  });
+
+  test('react/jsx-filename-extension stays off', async () => {
+    for (const file of [FILE, 'app/utils/probe.ts', 'probe.js']) {
+      expect(await severityOf(file, 'react/jsx-filename-extension')).toBe(0);
+    }
+  });
+
+  test('a .ts hook still reports a conditional hook call', async () => {
+    const code = [
+      "import {useState} from 'react';",
+      '',
+      'export const useProbe = (on: boolean): number => {',
+      '  if (on) {',
+      '    useState(0);',
+      '  }',
+      '  return 1;',
+      '};',
+      '',
+    ].join('\n');
+    const [result] = await eslint.lintText(code, {
+      filePath: 'app/hooks/use-probe.ts',
+    });
+    expect(result.messages.map((message) => message.ruleId)).toContain(
+      'react-hooks/rules-of-hooks',
+    );
+  });
+});

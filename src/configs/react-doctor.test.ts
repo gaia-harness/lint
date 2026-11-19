@@ -8,10 +8,14 @@
  * `calculateConfigForFile` computes config only; it never parses the file, so
  * the paths below do not need to exist.
  */
-import {ESLint, type Linter} from 'eslint';
+import {ESLint, Linter, type Rule} from 'eslint';
 import tseslint from 'typescript-eslint';
 import {describe, expect, test} from 'vitest';
 import gaiaLint from '../index.js';
+import {
+  REACT_DOCTOR_PLUGINS,
+  REACT_DOCTOR_REACT_JSX_RULES,
+} from './react-doctor.js';
 
 const lint = gaiaLint();
 const RD = 'react-doctor/';
@@ -68,13 +72,8 @@ const ERROR = 2;
  * from the first batch, plus at least one per group added later.
  */
 
-/** Rules owned by `react`: every TS/JS file. */
-const REACT_RULES: Record<string, number> = {
-  // SSR and hydration
-  'no-hydration-branch-on-browser-global': ERROR,
-  'no-locale-format-in-render': WARN,
-  'no-match-media-in-state-initializer': WARN,
-  'no-unguarded-browser-global-in-render-or-hook-init': ERROR,
+/** Rules owned by `react` that read only JSX: `.jsx` and `.tsx` files. */
+const REACT_JSX_RULES: Record<string, number> = {
   // HTML validity
   'form-control-requires-name': WARN,
   'html-no-invalid-paragraph-child': WARN,
@@ -86,6 +85,20 @@ const REACT_RULES: Record<string, number> = {
   'no-multiple-main-landmarks': WARN,
   'no-responsive-hidden-accessible-name': WARN,
   'no-skipped-heading-level': WARN,
+  // images and scripts
+  'no-img-without-dimensions': WARN,
+  'rendering-script-defer-async': WARN,
+  // motion and font
+  'no-ungated-tailwind-animation': WARN,
+};
+
+/** Rules owned by `react`: every TS/JS file. */
+const REACT_RULES: Record<string, number> = {
+  // SSR and hydration
+  'no-hydration-branch-on-browser-global': ERROR,
+  'no-locale-format-in-render': WARN,
+  'no-match-media-in-state-initializer': WARN,
+  'no-unguarded-browser-global-in-render-or-hook-init': ERROR,
   // render and state purity
   'no-create-context-in-render': ERROR,
   'no-side-effect-in-state-updater-function': WARN,
@@ -93,13 +106,9 @@ const REACT_RULES: Record<string, number> = {
   'no-fetch-in-effect': WARN,
   'no-fetch-response-used-without-status-check': WARN,
   'no-set-state-after-await-in-effect': WARN,
-  // performance, images and scripts
+  // performance
   'async-parallel': WARN,
-  'no-img-without-dimensions': WARN,
-  'rendering-script-defer-async': WARN,
   'rerender-lazy-state-init': WARN,
-  // motion and font
-  'no-ungated-tailwind-animation': WARN,
   // size and complexity
   'no-giant-component': WARN,
   'no-high-complexity-react-function': WARN,
@@ -180,6 +189,7 @@ describe('react-doctor rule severities', () => {
       expect.arrayContaining(
         [
           ...Object.keys(REACT_RULES),
+          ...Object.keys(REACT_JSX_RULES),
           ...Object.keys(REACT_ROUTER_RULES),
           ...Object.keys(QUERY_RULES),
           MODULE_SCOPE_RULE,
@@ -225,6 +235,17 @@ describe('react-doctor rule severities', () => {
     });
   }
 
+  for (const [rule, severity] of Object.entries(REACT_JSX_RULES)) {
+    test(`${rule} is ${severity === ERROR ? 'error' : 'warn'} on components and routes, off on .ts files`, async () => {
+      for (const file of [COMPONENT, ROUTE]) {
+        expect(await severityOf(FULL, file, `${RD}${rule}`)).toBe(severity);
+      }
+      for (const file of [HOOK, SERVICE]) {
+        expect(await severityOf(FULL, file, `${RD}${rule}`)).toBe(0);
+      }
+    });
+  }
+
   test(`${MODULE_SCOPE_RULE} is warn on source files`, async () => {
     for (const file of [COMPONENT, ROUTE, HOOK, SERVICE]) {
       expect(await severityOf(FULL, file, `${RD}${MODULE_SCOPE_RULE}`)).toBe(
@@ -254,6 +275,7 @@ describe('react-doctor rule severities', () => {
   test('react and guardrails rules hold without the reactRouter opt-in', async () => {
     for (const [rule, severity] of Object.entries({
       ...REACT_RULES,
+      ...REACT_JSX_RULES,
       ...GUARDRAIL_RULES,
     })) {
       expect(await severityOf(WITHOUT_ROUTER, COMPONENT, `${RD}${rule}`)).toBe(
@@ -291,6 +313,54 @@ describe('react-doctor capabilities', () => {
     });
     const resolved = (await eslint.calculateConfigForFile(ROUTE)) as Linter.Config;
     expect(resolved.settings?.['react-doctor']).toBeUndefined();
+  });
+});
+
+describe('react-doctor JSX-only rules', () => {
+  // `react` runs these on `.jsx` and `.tsx` only. That is safe while each
+  // listens to JSX nodes and nothing else; a plugin bump that adds a listener
+  // on plain code would lose coverage on `.ts` files, so it fails here.
+  test('listen to JSX nodes only', () => {
+    const plugin = REACT_DOCTOR_PLUGINS['react-doctor'];
+    const listeners: Record<string, string[]> = {};
+    const ids = Object.keys(REACT_DOCTOR_REACT_JSX_RULES).map((rule) =>
+      rule.slice(RD.length),
+    );
+    const rules: Record<string, Rule.RuleModule> = {};
+    for (const id of ids) {
+      const original = plugin.rules![id] as Rule.RuleModule;
+      rules[id] = {
+        create: (context) => {
+          const listener = original.create(context);
+          listeners[id] = Object.keys(listener);
+          return listener;
+        },
+        meta: original.meta,
+      };
+    }
+    new Linter().verify(
+      'const Probe = () => <p />;\nexport default Probe;\n',
+      [
+        {
+          files: ['**/*.tsx'],
+          languageOptions: {
+            parser: tseslint.parser,
+            parserOptions: {ecmaFeatures: {jsx: true}},
+          },
+          plugins: {probe: {rules}},
+          rules: Object.fromEntries(ids.map((id) => [`probe/${id}`, 'warn'])),
+        },
+      ],
+      'probe.tsx',
+    );
+    for (const id of ids) {
+      const keys = listeners[id] ?? [];
+      expect(keys.length, id).toBeGreaterThan(0);
+      expect(
+        keys.filter((key) => !key.includes('JSX') && !key.startsWith('Program')),
+        id,
+      ).toEqual([]);
+    }
   });
 });
 
