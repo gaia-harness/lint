@@ -401,6 +401,7 @@ describe('vendored-ui exemption', () => {
     '@eslint-react/no-context-provider',
     '@eslint-react/no-use-context',
     '@stylistic/padding-line-between-statements',
+    '@typescript-eslint/consistent-type-imports',
     '@typescript-eslint/no-confusing-void-expression',
     '@typescript-eslint/no-import-type-side-effects',
     '@typescript-eslint/no-shadow',
