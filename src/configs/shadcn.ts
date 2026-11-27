@@ -76,6 +76,10 @@ const VENDORED_UI_RULES_OFF: Linter.RulesRecord = {
   '@stylistic/quotes': 'off',
   // shadcn writes `Array<T>`.
   '@typescript-eslint/array-type': 'off',
+  // `import * as React from "react"` used only in type positions (alert,
+  // input, input-group, label, native-select, textarea, toast);
+  // typescript-eslint 8.74 flags it.
+  '@typescript-eslint/consistent-type-imports': 'off',
   // Helper exports carry inferred return types (use-mobile, highlighter).
   '@typescript-eslint/explicit-module-boundary-types': 'off',
   // toggle-group.tsx: `import { type VariantProps } from ...`.
