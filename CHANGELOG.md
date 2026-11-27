@@ -1,5 +1,11 @@
 # @gaia-react/lint
 
+## 3.2.3
+
+### Patch Changes
+
+- [#104](https://github.com/gaia-harness/lint/pull/104) [`e92866d`](https://github.com/gaia-harness/lint/commit/e92866d96092bbae6c57086b5ca95ee0df25e8d6) Thanks [@stevensacks](https://github.com/stevensacks)! - Turn `@typescript-eslint/consistent-type-imports` off for vendored shadcn ui files. typescript-eslint 8.74 flags their `import * as React from "react"` when React is used only in type positions, and its autofix rewrote stock registry output.
+
 ## 3.2.2
 
 ### Patch Changes
